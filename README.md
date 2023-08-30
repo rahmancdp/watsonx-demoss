@@ -2,3 +2,4 @@
 
 1. text summarizar with watsonx
 2. data ingestor to milvus
+3. bot to bot conversation on pros and cons
