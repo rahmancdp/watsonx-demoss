@@ -1,1 +1,1 @@
-it is a sample code base on langchain example, and try to call watsonx.ai model and present in streamlit
+run the program with streamlit run streamlit_chatbot_with_watsonx.py
