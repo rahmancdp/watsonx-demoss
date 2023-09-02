@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 
-from langchain.docstore.document import Document
-from langchain.chains.summarize import load_summarize_chain
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory
 
 from genai.credentials import Credentials
 from genai.extensions.langchain import LangChainInterface
@@ -16,9 +16,9 @@ api_endpoint = os.getenv("GENAI_API", None)
 creds = Credentials(api_key,api_endpoint)
 
 params = GenerateParams(
-    decoding_method="sample",
+    decoding_method="greedy",
     max_new_tokens=200,
-    min_new_tokens=30,
+    min_new_tokens=1,
     stream=False,
     temperature=0.7,
     top_k=50,
@@ -38,6 +38,8 @@ with st.chat_message("system"):
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+memory = ConversationBufferMemory()
+
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -47,13 +49,15 @@ if prompt := st.chat_input("Say something"):
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
-    docs = [Document(page_content=prompt)]
 
-    llm = LangChainInterface(model="meta-llama/Llama-2-7b",credentials=creds, params=params)
-    chain = load_summarize_chain(llm,chain_type="map_reduce")
-    response_text = chain.run(docs)
+    llm = LangChainInterface(model="meta-llama/llama-2-7b-chat",credentials=creds, params=params)
+    conversation = ConversationChain(llm=llm, memory=memory)
+    response_text = conversation.run(prompt)
 
-    st.session_state.messages.append({"role": "system", "content": response_text})
+    st.session_state.messages.append({"role": "agent", "content": response_text})
 
-    with st.chat_message("system"):
+    memory.chat_memory.add_user_message(prompt)
+    memory.chat_memory.add_ai_message(response_text)
+
+    with st.chat_message("agent"):
         st.markdown(response_text)
