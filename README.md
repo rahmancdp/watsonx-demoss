@@ -7,3 +7,5 @@ try to make coding with watsonx easier, here I will put much simplist sample cod
 3. bot to bot conversation on pros and cons
 4. question and answer with rag
 5. chatbot by streamit with watsonx
+6. code assist with IBM granite code
+7. translation assistant to multiple language
