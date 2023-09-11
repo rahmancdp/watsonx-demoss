@@ -1,0 +1,5 @@
+phone
+tablet
+earbuds
+washing machine
+refrigerator
