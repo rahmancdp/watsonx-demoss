@@ -2,12 +2,9 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-
 from genai.credentials import Credentials
-from genai.extensions.langchain import LangChainInterface
 from genai.schemas import GenerateParams
+from genai.model import Model
 
 load_dotenv()
 api_key = os.getenv("GENAI_KEY", None)
@@ -16,14 +13,15 @@ api_endpoint = os.getenv("GENAI_API", None)
 creds = Credentials(api_key,api_endpoint)
 
 params = GenerateParams(
-    decoding_method="greedy",
+    decoding_method="sample",
     max_new_tokens=200,
     min_new_tokens=1,
     stream=False,
     temperature=0.7,
     top_k=50,
-    top_p=1
-).dict()
+    top_p=1,
+    stop_sequences= ["Human:","AI:"],
+)
 
 with st.sidebar:
     st.title("watsonx Streamlit")
@@ -38,7 +36,7 @@ with st.chat_message("system"):
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-memory = ConversationBufferMemory()
+llm = Model(model="meta-llama/llama-2-7b-chat",credentials=creds, params=params)
 
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
@@ -50,14 +48,12 @@ if prompt := st.chat_input("Say something"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    llm = LangChainInterface(model="meta-llama/llama-2-7b-chat",credentials=creds, params=params)
-    conversation = ConversationChain(llm=llm, memory=memory)
-    response_text = conversation.run(prompt)
+    response_text = llm.generate([prompt])
+    answer = ""
+    for response in response_text:
+        answer += response.generated_text
 
-    st.session_state.messages.append({"role": "agent", "content": response_text})
-
-    memory.chat_memory.add_user_message(prompt)
-    memory.chat_memory.add_ai_message(response_text)
+    st.session_state.messages.append({"role": "agent", "content": answer}) 
 
     with st.chat_message("agent"):
-        st.markdown(response_text)
+        st.markdown(answer)
