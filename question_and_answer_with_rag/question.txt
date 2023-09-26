@@ -1,0 +1,61 @@
+{
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] There's noise after installation. Is this normal?
+[Agent] What product is it?
+[Customer] Dryer
+Query: Is it normal for my dryer to make a lot of noise after installation?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] It seems my clothes aren't drying properly.
+[Agent] What product are you using?
+[Customer] Dryer
+Query: What can I do if my clothes aren't drying properly?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] The washing machine isn't working. How can I fix it?
+[Agent] Can you elaborate so that I can help with troubleshooting?
+[Customer] After each wash cycle, I find that the load is still wet.
+Query: How can I fix my washing machine? I have a Samsung washer.""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] How can I set the water temperature?
+[Agent] Can you provide the product you are using?
+[Customer] Washing Machine
+Query: How can I set the water temperature? on the washing machine?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] My step count isn't accurate when I run.
+[Agent] What is the product you are using?
+[Customer] Galaxy watch6
+Query: How do I get my step count to be accurate when I run? I have a Samsung Galaxy watch6.""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] The watch vibration feels too strong.
+[Agent] Can you provide the product?
+[Customer] Galaxy watch6
+Query: How do I turn off the vibration on my Galaxy watch6?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] What should I do if lose the Buds?
+[Agent] Can you tell me the model?
+[Customer] Galaxy Buds2 Pro
+Query: What should I do if lose the Galaxy Buds2 Pro?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] I can't hear the tablet's sound well.
+[Agent] Which product are you using?
+[Customer] Galaxy Note20
+Query: How do I turn up the volume on my Galaxy Note20?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] Can I edit videos taken with the tablet?
+[Agent] What is the model?
+[Customer] Galaxy Tab A8
+Query: Can I edit videos taken with the Galaxy Tab A8?""",
+ 
+"""Dialogue: [Agent] Hello, my name is Lee, how can I help you today?
+[Customer] The facial recognition isn't working.
+[Agent] What is the product you are using?
+[Customer] Galaxy Note20
+Query: How do I use facial recognition on my Galaxy Note20?"""
+}
