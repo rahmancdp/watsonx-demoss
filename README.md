@@ -12,4 +12,6 @@ update the API call to IBM public cloud version.
 6. code assist
     6.1 SOAP to RESTFUL conversion
     6.2 Java Testcase generation
+    6.3 CSV to JSON conversion
+    6.4 Struts to Spring conversion
 7. translation assistant to multiple language
