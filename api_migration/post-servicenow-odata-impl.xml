@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<!-- <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="9bbd44f1-57e3-4ac0-8997-eb1e19fe7296" basePath="${http.servicenow.basePath}" >
+		<http:request-connection host="${http.servicenow.host}" connectionIdleTimeout="${http.servicenow.timeout}" protocol="HTTPS">
+			<http:proxy-config >
+				<http:proxy host="${http.servicenow.proxyhost}" port="${http.servicenow.proxyport}" />
+			</http:proxy-config>
+			<http:authentication >
+				<http:basic-authentication username="${http.servicenow.user}" password="${http.servicenow.password}" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config> -->
+	<sub-flow name="post-servicenow-odata-impl" doc:id="8d803282-9d42-4143-a5ba-aaa0b81af114" >
+		<logger level="INFO" doc:name="Logger" doc:id="ac5773d2-cc6f-44f4-be09-84d3eb091fd3" message="before request::: #[payload]"/>
+		<flow-ref doc:name="log-before-outbound-request" doc:id="e882a987-e045-44e2-ba10-3eb1d325ec72" name="log-before-outbound-request"/>
+       <http:request method="POST" doc:name="Request for Service Now" doc:id="f076d3e3-3ac5-4d67-b531-555cfaf42c94" config-ref="HTTP_ServiceNow_Connext" path="${http.servicenow.path}" target="returnedMessage" targetValue="#[message]">
+			<reconnect />
+			<http:response-validator >
+				<http:success-status-code-validator values="200..599" />
+			</http:response-validator>
+		</http:request>		
+		<flow-ref doc:name="log-after-outbound-request" doc:id="90eefafd-1cc3-4426-a8f7-2229ee191890" name="log-after-outbound-request"/>
+		<ee:transform doc:name="Transform Message" doc:id="61188c02-adff-496e-a704-9b38623548e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.returnedMessage.payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b45b48c8-0b43-463f-a85f-4484156822ee" message="response from SNOW::: #[payload]"/>
+	
+</sub-flow>
+</mule>

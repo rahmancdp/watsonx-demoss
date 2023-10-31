@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+		<flow name="get-chgsap-odata-identifier-flow" doc:id="43f236cd-9054-419b-bf8c-54b9b7d2535f" >
+		<choice doc:name="Choice" doc:id="f6692c6a-7ea5-42c0-812d-c2d73dad6b37" >
+			<when expression="#[message.attributes.queryParams.'fromDate' == null]">
+				<ee:transform doc:name="Transform Message" doc:id="80bc9a4d-346f-45d2-9c21-ec6113e3d577" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var spclchar = '\''
+---
+{
+	'\$filter': "PONUMBER eq " ++ spclchar ++ message.attributes.queryParams.'PONumber'++ spclchar  default "",
+	
+} ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="839c1c3e-5276-4105-b644-65cad358803b" message="PONumber URL:: #[payload]"/>
+				<flow-ref doc:name="get-chgsap-odata-impl" doc:id="86e611c3-b90b-4de3-b492-2890f9797023" name="get-chgsap-odata-impl"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="1f1caf4b-0331-4c02-8995-3889010f450e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var spclchar = '\''
+---
+{
+	'\$filter': "FROM_DATE eq " ++ spclchar ++ message.attributes.queryParams.'fromDate'++ spclchar  ++ " and TO_DATE eq " ++ spclchar  ++ message.attributes.queryParams.'toDate' ++ spclchar  default "",
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="09e1d439-510a-472e-afd5-92e064b71265" message="Date URL::: #[payload]"/>
+				<flow-ref doc:name="get-chgsap-odata-impl" doc:id="a17c9504-ed0c-4c50-bc1f-9065054a55a1" name="get-chgsap-odata-impl"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="get-chgsap-odata-impl" doc:id="d9595c12-4e9f-48b5-8f66-a35812450de4" >
+		<http:request method="GET" doc:name="Request to CHGSAP" doc:id="e01eb7ea-d248-4ef3-a111-f6ea21874df9" config-ref="HTTP_Request_CHGSAP" path="${http.chgsap.poPath}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"sap-client" : Mule::p("http.chgsap.sapclient"),
+	"Accept" : "application/json"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+payload]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="3eb4c8c5-1d2d-46cf-8e6e-b96a907c3d3c" message="Response from CHGSAP::: #[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="3a82ca04-5603-48a9-b7a8-240b0a28ec7a" >
+			<ee:message >
+				<ee:set-payload resource="dwl/chgsapRequestToSNOW.dwl" />
+			
+</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="log-before-outbound-request" doc:id="d00a28dd-ba52-47d1-ae0f-c84cfa00122e" name="log-before-outbound-request"/>
+		<!-- <http:request method="POST" doc:name="Request for Service Now" doc:id="dc366143-0db2-4351-a11d-e4ed87d1b106" config-ref="HTTP_ServiceNow" path="${http.servicenow.path}" target="returnedMessage" targetValue="#[message]">
+			<reconnect />
+			<http:response-validator >
+				<http:success-status-code-validator values="200..599" />
+			</http:response-validator>
+		</http:request> -->
+		<http:request method="POST" doc:name="Request to System API" doc:id="98e9e7c1-413c-4e8d-846e-7ea862d705f4" config-ref="HTTP_Request_System_SNOW_API" path="${sysApi.path}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : Mule::p('secure::sysApi.client_secret'),
+	"client_id" : Mule::p('secure::sysApi.client_id')
+}]]]></http:headers>
+		</http:request>
+		<flow-ref doc:name="log-after-outbound-request" doc:id="02b2879f-b17d-4f7e-bd39-fde3d3f01094" name="log-after-outbound-request"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e222c11d-6a6d-4a10-9edd-11bac76910b6" message='#["Status Code:" ++ message.attributes.statusCode ++ " : " ++ message.attributes.reasonPhrase]' />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fc8e1c1e-dcf2-425b-beb8-a6079671e398" >
+				<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="e1b5f8ce-5cd9-4067-9f49-4534eea976fa" />
+			</on-error-propagate>
+		</error-handler>	
+		</flow>
+</mule>
