@@ -10,8 +10,11 @@ update the API call to IBM public cloud version.
 4. question and answer with rag
 5. chatbot by streamit with watsonx
 6. code assist
-    6.1 SOAP to RESTFUL conversion
+    6.1 SOAP to RESTFUL conversion, handle larger SOAP with splitter
     6.2 Java Testcase generation
     6.3 CSV to JSON conversion
     6.4 Struts to Spring conversion
 7. translation assistant to multiple language
+8. doc builder with doc template
+9. ppt translator
+10. rag with table leverage unstructured
