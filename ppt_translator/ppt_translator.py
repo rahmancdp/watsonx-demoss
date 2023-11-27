@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-from io import StringIO
 from pptx import Presentation
 from pptx.enum.lang import MSO_LANGUAGE_ID
 
@@ -29,20 +27,13 @@ params = GenerateParams(
     stop_sequences=["\\n\\n"]
 )
 
-# llm = Model(model="ibm/granite-13b-chat-v1",credentials=creds, params=params)
-llm = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+llm = Model(model="bigscience/mt0-xxl",credentials=creds, params=params)
 
 def buildprompt(text):
-    return f"""[INST]be a translator, be concise.
+    return f"""be a translator, be concise.
     return the translated content only.
-    dont output note.
-    keep the time format.
-    keep watsonx, watson.
     please help translate following english to traditional chinese.
-    <<SYS>>
     english:{text}
-    <</SYS>>
-    [/INST]
     traditional chinese:"""
 
 def translate_ppt(pptfile):
@@ -55,9 +46,7 @@ def translate_ppt(pptfile):
 
     slide_number = 1
     for slide in presentation.slides:
-        print('Slide {slide_number} of {number_of_slides}'.format(
-                slide_number=slide_number,
-                number_of_slides=len(presentation.slides)))
+        st.write(f'Slide {slide_number} of {len(presentation.slides)}')
         slide_number += 1
 
         # translate comments
@@ -65,8 +54,8 @@ def translate_ppt(pptfile):
             text_frame = slide.notes_slide.notes_text_frame
             if len(text_frame.text) > 0:
                 prompttemplate = buildprompt(text_frame.text)
-                response = llm.generate([prompttemplate])
-                slide.notes_slide.notes_text_frame.text = response[0].generated_text
+                for response in llm.generate([prompttemplate]):
+                    slide.notes_slide.notes_text_frame.text = response.generated_text
 
 
         # translate other texts
@@ -75,37 +64,30 @@ def translate_ppt(pptfile):
                 for cell in shape.table.iter_cells():
                     engtext = cell.text
                     prompttemplate = buildprompt(cell.text)
-                    response = llm.generate([prompttemplate])
-                    cell.text = response[0].generated_text
-                    # print(engtext+'->'+response[0].generated_text)
+                    for response in llm.generate_async([prompttemplate]):
+                        cell.text = response.generated_text
+                        print(engtext+'->'+response.generated_text)
 
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     for index, paragraph_run in enumerate(paragraph.runs):
                         engtext = paragraph_run.text
                         prompttemplate = buildprompt(paragraph_run.text)
-                        response = llm.generate([prompttemplate])
-                        paragraph.runs[index].text = response[0].generated_text
-                        # print(engtext+'->'+response[0].generated_text)
-                        paragraph.runs[index].font.language_id = targetlang
+                        for response in llm.generate([prompttemplate]):
+                            paragraph.runs[index].text = response.generated_text
+                            print(engtext+'->'+response.generated_text)
+                            paragraph.runs[index].font.language_id = targetlang
 
-    presentation.save(dataoutput)
-    return dataoutput
+    output_file_path = pptfile.replace('.pptx', '-out.pptx')
+    presentation.save(output_file_path)
+    return output_file_path
 
-uploaded_file = st.file_uploader("Choose a file")
+uploaded_file = st.file_uploader(label="upload a ppt",type=['ppt','pptx'])
 if uploaded_file is not None:
-    # To read file as bytes:
-    bytes_data = uploaded_file.getvalue()
-    st.write(bytes_data)
+    st.write("filename:", uploaded_file.name)
+    with open(os.path.join("/Users/yingkitw/Desktop/tempDir/",uploaded_file.name),"wb") as f:
+        f.write(uploaded_file.getbuffer())
 
-    # To convert to a string based IO:
-    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-    st.write(stringio)
-
-    # To read file as string:
-    string_data = stringio.read()
-    st.write(string_data)
-
-    # Can be used wherever a "file-like" object is accepted:
-    dataframe = pd.read_csv(uploaded_file)
-    st.write(dataframe)
+    output_file_path = translate_ppt(os.path.join("/Users/yingkitw/Desktop/tempDir/",uploaded_file.name))
+    with open(output_file_path,'rb') as f:
+        st.download_button('Download translated version', f,'translate.pptx')
