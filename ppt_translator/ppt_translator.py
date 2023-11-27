@@ -38,15 +38,15 @@ llm = Model(model="bigscience/mt0-xxl",credentials=creds, params=params)
 def buildprompt(text):
     return f"""be a translator, be concise.
     return the translated content only.
-    please help translate following english to traditional chinese.
+    please help translate following english to {targetlang}.
     english:{text}
-    traditional chinese:"""
+    {targetlang}:"""
 
-def translate_ppt(pptfile):
+def translate_ppt(pptfile,targetlang):
     # input_file_path = "sample.pptx"
 
-    sourcelang = MSO_LANGUAGE_ID.ENGLISH_US
-    targetlang = MSO_LANGUAGE_ID.CHINESE_HONG_KONG_SAR
+    # sourcelang = MSO_LANGUAGE_ID.ENGLISH_US
+    # targetlang = MSO_LANGUAGE_ID.CHINESE_HONG_KONG_SAR
 
     presentation = Presentation(pptfile)
 
@@ -82,13 +82,20 @@ def translate_ppt(pptfile):
                         for response in llm.generate([prompttemplate]):
                             paragraph.runs[index].text = response.generated_text
                             print(engtext+'->'+response.generated_text)
-                            paragraph.runs[index].font.language_id = targetlang
+                            # paragraph.runs[index].font.language_id = targetlang
 
-    output_file_path = pptfile.replace('.pptx', '-out.pptx')
+    output_file_path = pptfile.replace('.pptx', f'-{targetlang}.pptx')
     presentation.save(output_file_path)
     return output_file_path
 
 temp_dir = tempfile.TemporaryDirectory()
+
+st.header("ppt translator powered by watsonx")
+
+targetlang = st.selectbox(
+    'What language you want to translate to?',
+    ('Chinese', 'Korean', 'Japanese','Thai','Malay','Bahasa Indonesia'))
+
 
 uploaded_file = st.file_uploader(label="upload a ppt",type=['ppt','pptx'])
 if uploaded_file is not None:
@@ -96,6 +103,6 @@ if uploaded_file is not None:
     with open(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),"wb") as f:
         f.write(uploaded_file.getbuffer())
 
-    output_file_path = translate_ppt(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name))
+    output_file_path = translate_ppt(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),targetlang)
     with open(output_file_path,'rb') as f:
-        st.download_button('Download translated version', f,'translate.pptx')
+        st.download_button('Download translated version', f,f'translate-{targetlang}.pptx')
