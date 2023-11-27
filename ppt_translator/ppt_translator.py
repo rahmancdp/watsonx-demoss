@@ -6,10 +6,16 @@ from genai.credentials import Credentials
 from genai.schemas import GenerateParams
 from genai.model import Model
 
+import tempfile
+import pathlib
+
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+api_key = st.secrets["GENAI_KEY"]
+api_endpoint = st.secrets["GENAI_API"]
 
 api_key = os.getenv("GENAI_KEY", None)
 api_endpoint = os.getenv("GENAI_API", None)
@@ -82,12 +88,14 @@ def translate_ppt(pptfile):
     presentation.save(output_file_path)
     return output_file_path
 
+temp_dir = tempfile.TemporaryDirectory()
+
 uploaded_file = st.file_uploader(label="upload a ppt",type=['ppt','pptx'])
 if uploaded_file is not None:
     st.write("filename:", uploaded_file.name)
-    with open(os.path.join("/Users/yingkitw/Desktop/tempDir/",uploaded_file.name),"wb") as f:
+    with open(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),"wb") as f:
         f.write(uploaded_file.getbuffer())
 
-    output_file_path = translate_ppt(os.path.join("/Users/yingkitw/Desktop/tempDir/",uploaded_file.name))
+    output_file_path = translate_ppt(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name))
     with open(output_file_path,'rb') as f:
         st.download_button('Download translated version', f,'translate.pptx')
