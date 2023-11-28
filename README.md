@@ -17,4 +17,10 @@ update the API call to IBM public cloud version.
 7. translation assistant to multiple language
 8. doc builder with doc template
 9. ppt translator
+    - jupyter notebook version
+    - streamlit version
 10. rag with table leverage unstructured
+11. requirement assistant
+    - get summary
+    - get key information (TODO)
+    - generate test case (TODO)
