@@ -49,14 +49,14 @@ def translate_doc(docfile,sourcelang,targetlang):
 
     for paragraph in adoc.paragraphs:
         prompt = buildprompt(paragraph.text,sourcelang,targetlang)
-        for response in model.generate([prompt]):
+        for response in llm.generate([prompt]):
             paragraph.text = response.generated_text
 
     for table in adoc.tables:
         for row in table.rows:
             for cell in row.cells:
                 prompt = buildprompt(cell.text,sourcelang,targetlang)
-                for response in model.generate([prompt]):
+                for response in llm.generate([prompt]):
                     cell.text = response[0].generated_text
 
     output_file_path = input_file_path.replace(
