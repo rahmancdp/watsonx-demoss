@@ -16,7 +16,7 @@ update the API call to IBM public cloud version.
     - 6.4 Struts to Spring conversion
 7. translation assistant to multiple language
 8. doc builder with doc template
-9. ppt translator
+9. file translator support ppt and doc
     - jupyter notebook version
     - streamlit version
 10. rag with table leverage unstructured
