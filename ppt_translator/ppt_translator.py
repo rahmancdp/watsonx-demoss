@@ -59,9 +59,6 @@ def translate_doc(docfile,sourcelang,targetlang):
                 for response in llm.generate([prompt]):
                     cell.text = response.generated_text
 
-    output_file_path = input_file_path.replace(
-            '.docx', '-out.docx')
-
     output_file_path = docfile.replace('.docx', f'-{targetlang}.docx')
     adoc.save(output_file_path)
     return output_file_path
