@@ -1,4 +1,6 @@
 import streamlit as st
+from code_editor import code_editor
+
 from pptx import Presentation
 from pptx.enum.lang import MSO_LANGUAGE_ID
 
@@ -48,7 +50,7 @@ def codeconvert(incode,sourcelang,targetlang):
     chunks = []
     for i in range(0, len(incode), chunk_size):
         chunks += [incode[i:i+chunk_size]]
-        
+
     prompts = []
     for chunk in chunks:
         prompts += [buildprompt(chunk,sourcelang,targetlang)]
@@ -215,12 +217,14 @@ with col1:
     sourcelang = st.selectbox(
         'What program language you want to convert from?',
         ('csharp','java', 'python'))
-    st.code(incode,language=sourcelang)
+    sourcecode = st.code(incode,language=sourcelang)
+    # sourcecode = code_editor(incode, lang=sourcelang)
 
 with col2:
     targetlang = st.selectbox(
         'What program language you want to convert to?',
         ('java', 'csharp', 'python'))
     if convertbutton:
+        # st.write(sourcecode['text'])
         outcode = codeconvert(incode,sourcelang,targetlang)
         st.code(outcode,language=targetlang)
