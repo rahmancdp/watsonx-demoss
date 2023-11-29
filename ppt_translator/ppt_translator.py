@@ -26,10 +26,9 @@ creds = Credentials(api_key,api_endpoint)
 
 params = GenerateParams(
     decoding_method="greedy",
-    max_new_tokens=50,
+    max_new_tokens=1000,
     min_new_tokens=1,
     stream=False,
-    temperature=0.05,
     top_k=50,
     top_p=1,
     stop_sequences=["\\n\\n"]
@@ -40,8 +39,8 @@ llm = Model(model="bigscience/mt0-xxl",credentials=creds, params=params)
 def buildprompt(text,sourcelang,targetlang):
     return f"""be a translator, be concise.
     return the translated content only.
-    please help translate following {sourcelang} to {targetlang}.
-    {sourcelang}:{text}
+    please help translate following {sourcelang} in backquoted to {targetlang}:
+    {sourcelang}:`{text}`
     {targetlang}:"""
 
 def translate_doc(docfile,sourcelang,targetlang):
@@ -107,7 +106,7 @@ def translate_ppt(pptfile,sourcelang,targetlang):
 
 temp_dir = tempfile.TemporaryDirectory()
 
-st.header("ppt translator powered by watsonx")
+st.header("document translator powered by watsonx")
 
 sourcelang = st.selectbox(
     'What language you want to translate from?',
