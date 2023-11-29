@@ -34,7 +34,7 @@ params = GenerateParams(
     stop_sequences=["\\n\\n"]
 )
 
-llm = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+llm = Model(model="meta-llama/llama-2-13b-chat",credentials=creds, params=params)
 
 def buildprompt(text,sourcelang,targetlang):
     return f"""[INST]be a translator, be concise.
