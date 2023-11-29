@@ -34,13 +34,16 @@ params = GenerateParams(
     stop_sequences=["\\n\\n"]
 )
 
-llm = Model(model="bigscience/mt0-xxl",credentials=creds, params=params)
+llm = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 def buildprompt(text,sourcelang,targetlang):
-    return f"""be a translator, be concise.
+    return f"""[INST]be a translator, be concise.
     return the translated content only.
     please help translate following {sourcelang} in backquoted to {targetlang}:
+    <<SYS>>
     {sourcelang}:`{text}`
+    <<SYS>>
+    [/INST]
     {targetlang}:"""
 
 def translate_doc(docfile,sourcelang,targetlang):
