@@ -61,7 +61,7 @@ def buildpromptforquery(query,context):
 please generate SQL for following query in backquoted
 <<SYS>>
 query:`{query}`
-context:{context}
+context:`{context}`
 <<SYS>>
 [/INST]
 SQL:"""
@@ -80,9 +80,10 @@ st.header("SQL assistant powered by watsonx")
 
 with st.sidebar:
     st.title("SQL assistant")
-    st.write("SQL-to-SQL migration")
+    st.write("SQL-to-SQL migration (TODO)")
     st.write("Text-to-SQL generation")
-    st.write("SQL-to-Text understanding")
+    st.write("SQL-to-Text understanding (TODO)")
+    st.write(f"table context {context}")
 
 with st.chat_message("system"):
     st.write("please input your query")
