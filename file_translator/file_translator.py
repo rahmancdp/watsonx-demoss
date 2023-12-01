@@ -127,10 +127,12 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
 
     if uploaded_file.name.lower().endswith(('.ppt', '.pptx')):
-        output_file_path = translate_ppt(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),sourcelang,targetlang)
+        with st.spinner(text="In progress...", cache=False):
+            output_file_path = translate_ppt(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),sourcelang,targetlang)
         with open(output_file_path,'rb') as f:
             st.download_button('Download translated version', f,f'translate-{targetlang}.pptx')
     elif uploaded_file.name.lower().endswith(('.doc', '.docx')):
-        output_file_path = translate_doc(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),sourcelang,targetlang)
+        with st.spinner(text="In progress...", cache=False):
+            output_file_path = translate_doc(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),sourcelang,targetlang)
         with open(output_file_path,'rb') as f:
             st.download_button('Download translated version', f,f'translate-{targetlang}.docx')
