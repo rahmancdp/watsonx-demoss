@@ -9,6 +9,6 @@ lxml
 langchainhub
 nltk
 pypdf
-pysqlite3-binary
+pysqlite3-binary >= 3.35.0
 chromadb
 sentence_transformers
