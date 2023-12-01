@@ -8,5 +8,5 @@ pydantic
 lxml
 langchainhub
 nltk
-ssl
+# ssl
 pickle
