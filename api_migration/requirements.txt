@@ -1,0 +1,4 @@
+python-pptx
+python-docx
+ibm-generative-ai
+streamlit-code-editor
