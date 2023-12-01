@@ -1,12 +1,15 @@
 import sys
 import logging
 import os
-import pickle
 import tempfile
 import pathlib
 
 import streamlit as st
 from dotenv import load_dotenv
+
+from chromadb.api.types import EmbeddingFunction
+from langchain.document_loaders import PyPDFLoader
+from sentence_transformers import SentenceTransformer
 
 from genai.extensions.langchain import LangChainInterface
 from genai.credentials import Credentials
@@ -15,15 +18,9 @@ from genai.model import Model
 
 from langchain.callbacks import StdOutCallbackHandler
 from langchain.chains.question_answering import load_qa_chain
-from langchain.document_loaders import PyPDFLoader
-from langchain.embeddings import (HuggingFaceHubEmbeddings,
-                                  HuggingFaceInstructEmbeddings)
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
-from PIL import Image
-from sentence_transformers import SentenceTransformer
-
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
@@ -65,25 +62,6 @@ params = GenerateParams(
 # Sidebar contents
 with st.sidebar:
     st.title("RAG App")
-    st.markdown('''
-    ## About
-    This app is an LLM-powered RAG built using:
-    - [IBM Generative AI SDK](https://github.com/IBM/ibm-generative-ai/)
-    - [HuggingFace](https://huggingface.co/)
-    - [IBM watsonx.ai](https://www.ibm.com/products/watsonx-ai) LLM model
- 
-    ''')
-    st.write('Powered by [IBM watsonx.ai](https://www.ibm.com/products/watsonx-ai)')
-    # image = Image.open('/Users/buckylee/Documents/github/Incubation_watsonx_Chinese/lab06a_Building Question-Answering with watsonx.ai and Streamlit with Retrieval Augmented Generation (Transient)/watsonxai.jpg')
-    # st.image(image, caption='Powered by watsonx.ai')
-    max_new_tokens= st.number_input('max_new_tokens',1,1024,value=300)
-    min_new_tokens= st.number_input('min_new_tokens',0,value=15)
-    repetition_penalty = st.number_input('repetition_penalty',1,2,value=2)
-    decoding = st.text_input(
-            "Decoding",
-            "greedy",
-            key="placeholder",
-        )
     
 uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
 
@@ -102,21 +80,11 @@ def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
              docs = text_splitter.split_documents(data)
              return docs
 
-@st.cache_data
 def read_push_embeddings():
-    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-    # embeddings = HuggingFaceEmbeddings()
+    # embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+    embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
-    picklepath = os.path.join(pathlib.Path(temp_dir.name),"db.pickle")
-
-    if os.path.exists(picklepath):
-        with open(picklepath,'rb') as file_name:
-            db = pickle.load(file_name)
-    else:     
-        db = Chroma.from_documents(docs, embeddings)
-        with open(picklepath,'wb') as file_name  :
-             pickle.dump(db,file_name)
-        st.write("\n")
+    db = Chroma.from_documents(docs, embeddings)
     return db
 
 # show user input
