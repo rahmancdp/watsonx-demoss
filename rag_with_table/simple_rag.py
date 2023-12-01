@@ -19,7 +19,7 @@ from langchain.embeddings import (HuggingFaceHubEmbeddings,
                                   HuggingFaceInstructEmbeddings)
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS, Chroma
+from langchain.vectorstores import Chroma
 from PIL import Image
 from sentence_transformers import SentenceTransformer
 
@@ -112,7 +112,7 @@ def read_push_embeddings():
         with open(picklepath,'rb') as file_name:
             db = pickle.load(file_name)
     else:     
-        db = FAISS.from_documents(docs, embeddings)
+        db = Chroma.from_documents(docs, embeddings)
         with open(picklepath,'wb') as file_name  :
              pickle.dump(db,file_name)
         st.write("\n")
