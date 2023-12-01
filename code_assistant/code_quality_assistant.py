@@ -34,43 +34,81 @@ params = GenerateParams(
     # stream=True,
     top_k=50,
     top_p=1,
-    stop_sequences=["'''","`\n"],
+    stop_sequences=["''''","end of code"],
 )
 
 llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
 llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 def buildpromptforrefactor(code,sourcelang):
-    return f"""refactor the following {sourcelang} code in backquoted with following rules:
-provide review comment only without example.
-show the code with problem star and end with *.
-review only base on following rules:
-1. controller should not just return object
-2. use enum instead of number value
-3. include transaction
-4. should not return map
-5. exception related log should exception information 
-6. pub log of function input variable in the first line of function.
-
-{sourcelang}:
+    return f"""[INST]as java developer, rewrite the following {sourcelang} code in backquoted with following rules:
+<<SYS>>
+notes:
+- provide the problem and review comment only
+- end the generation with <end-of-code>
+- review only base on following rules:
+rule 1. controller should not just return object:
+bad example:
+JsonResultVo<Object>
+rule 2. use enum instead of number value:
+bad example:
+switch (queryVo.getQueryType()) {{
+            case "1":
+}}
+good example:
+switch (queryVo.getQueryType()) {{
+            case queryVo.MEANING_FUL_NAME:
+}}
+rule 3. include transaction:
+example: 
+@Transactional(rollbackFor = Exception.class)
+rule 4. should not return hashmap:
+example:
+List<HashMap> queryUserAnswerDetails();
+rule 5. exception related log should exception information.
+rule 6. put log of function input variable in the first line of function:
+example:
+public Result<TokenVo> login(@RequestBody @Valid LoginForm record) {{
+        log.info("/hqActivityTemplateAuth/login 请求:{{}}", record);
+<<SYS>>
+target code:
 `{code}`
-refactored version:"""
+[/INST]
+rewrited version:"""
 
 def buildpromptforreview(code,sourcelang):
     return f"""[INST]
 as solution architect, please do code review for the {sourcelang} source code in backquoted
 <<SYS>>
-dont provide example.
-provide review comment only without example.
-show the code with problem star and end with *.
-review only base on following rules:
-1. controller should not just return object
-2. use enum instead of number value
-3. include transaction
-4. should not return map
-5. exception related log should exception information 
-6. pub log of function input variable in the first line of function.
+notes:
+- provide the problem and review comment only
+- end the generation with <end-of-code>
+- review only base on following rules:
+rule 1. controller should not just return object:
+bad example:
+JsonResultVo<Object>
+rule 2. use enum instead of number value:
+bad example:
+switch (queryVo.getQueryType()) {{
+            case "1":
+}}
+good example:
+switch (queryVo.getQueryType()) {{
+            case queryVo.MEANING_FUL_NAME:
+}}
+rule 3. include transaction:
+example: 
+@Transactional(rollbackFor = Exception.class)
+rule 4. should not return hashmap:
+example:
+List<HashMap> queryUserAnswerDetails();
+rule 5. exception related log should exception information.
+rule 6. put log of function input variable in the first line of function:
+example:
+public Result<TokenVo> login(@RequestBody @Valid LoginForm record) {{
+        log.info("/hqActivityTemplateAuth/login 请求:{{}}", record);
 
+target code:
 `{code}`
 <<SYS>>
 [/INST]
@@ -78,7 +116,8 @@ review:"""
 
 def coderefactor(incode,sourcelang):
     #chunking
-    chunk_size = len(incode)//4
+    chunk_size = 1000
+    #//4
     chunks = []
     for i in range(0, len(incode), chunk_size):
         chunks += [incode[i:i+chunk_size]]
@@ -87,7 +126,7 @@ def coderefactor(incode,sourcelang):
     for chunk in chunks:
         prompts += [buildpromptforrefactor(chunk,sourcelang)]
     code = ""
-    for response in llmstarcoder.generate_async(prompts,ordered=True):
+    for response in llmllama.generate_async(prompts,ordered=True):
         code += response.generated_text
     return code
 
