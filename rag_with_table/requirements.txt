@@ -8,5 +8,6 @@ pydantic
 lxml
 langchainhub
 nltk
+sentence_transformers
 # ssl
 # pickle
