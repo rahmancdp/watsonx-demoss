@@ -9,6 +9,7 @@ lxml
 langchainhub
 nltk
 pypdf
+faiss
 sentence_transformers
 # ssl
 # pickle
