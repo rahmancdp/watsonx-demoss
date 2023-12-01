@@ -1,1 +1,5 @@
 .env
+.chroma
+.streamlit
+*.xml
+*.sql

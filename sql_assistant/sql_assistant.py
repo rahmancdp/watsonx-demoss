@@ -100,8 +100,8 @@ if query := st.chat_input("your query"):
         st.markdown(query)
 
     st.session_state.messages.append({"role": "user", "content": query})
-
-    answer = querytosql(query,context)
+    with st.spinner(text="In progress...", cache=False):
+        answer = querytosql(query,context)
 
     st.session_state.messages.append({"role": "sql assistant", "content": answer}) 
 
