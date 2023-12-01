@@ -4,7 +4,6 @@ ibm-generative-ai
 streamlit-code-editor
 langchain
 unstructured
-"unstructured[all-docs]"
 pydantic
 lxml
 langchainhub
