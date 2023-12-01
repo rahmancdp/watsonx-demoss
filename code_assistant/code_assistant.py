@@ -115,11 +115,13 @@ with colconvert:
         ('java', 'csharp', 'python'))
     if convertbutton:
         # st.write(sourcecode['text'])
-        outcode = codeconvert(incode,sourcelang,targetlang)
+        with st.spinner(text="In progress...", cache=False):
+            outcode = codeconvert(incode,sourcelang,targetlang)
         st.code(outcode,language=targetlang)
 
 with coldocumentation:
     docbutton = st.button("generate documentation")
     if docbutton:
-        outdocumenation = codedocumentation(incode,sourcelang)
+        with st.spinner(text="In progress...", cache=False):
+            outdocumenation = codedocumentation(incode,sourcelang)
         st.write(outdocumenation)

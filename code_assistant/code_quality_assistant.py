@@ -172,12 +172,13 @@ with colsource:
 with colreview:
     reviewbutton = st.button("review")
     if reviewbutton:
-        outreview = codereview(incode,sourcelang)
+        with st.spinner(text="In progress...", cache=False):
+            outreview = codereview(incode,sourcelang)
         st.write(outreview)
 
 with colrefactor:
     refactorbutton = st.button("refactor")
     if refactorbutton:
-        # st.write(sourcecode['text'])
-        outcode = coderefactor(incode,sourcelang)
+        with st.spinner(text="In progress...", cache=False):
+            outcode = coderefactor(incode,sourcelang)
         st.code(outcode,language=sourcelang)
