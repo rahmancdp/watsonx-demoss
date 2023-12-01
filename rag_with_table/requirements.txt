@@ -8,6 +8,7 @@ pydantic
 lxml
 langchainhub
 nltk
+pypdf
 sentence_transformers
 # ssl
 # pickle
