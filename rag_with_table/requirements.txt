@@ -9,4 +9,4 @@ lxml
 langchainhub
 nltk
 # ssl
-pickle
+# pickle
