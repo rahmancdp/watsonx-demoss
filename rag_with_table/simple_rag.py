@@ -20,7 +20,7 @@ from langchain.callbacks import StdOutCallbackHandler
 from langchain.chains.question_answering import load_qa_chain
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
@@ -84,7 +84,7 @@ def read_push_embeddings():
     # embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
     embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
-    db = Chroma.from_documents(docs, embeddings)
+    db = FAISS.from_documents(docs, embeddings)
     return db
 
 # show user input
