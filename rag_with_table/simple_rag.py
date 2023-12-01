@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import tempfile
+import pathlib
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -102,14 +103,17 @@ def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
 
 @st.cache_data
 def read_push_embeddings():
-    # embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-    embeddings = HuggingFaceEmbeddings()
-    if os.path.exists("db.pickle"):
-        with open("db.pickle",'rb') as file_name:
+    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+    # embeddings = HuggingFaceEmbeddings()
+    temp_dir = tempfile.TemporaryDirectory()
+    picklepath = os.path.join(pathlib.Path(temp_dir.name),"db.pickle")
+
+    if os.path.exists(picklepath):
+        with open(picklepath,'rb') as file_name:
             db = pickle.load(file_name)
     else:     
         db = FAISS.from_documents(docs, embeddings)
-        with open('db.pickle','wb') as file_name  :
+        with open(picklepath,'wb') as file_name  :
              pickle.dump(db,file_name)
         st.write("\n")
     return db
