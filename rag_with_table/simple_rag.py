@@ -23,7 +23,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+# logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 st.set_page_config(
     page_title="Retrieval Augmented Generation",
@@ -58,9 +58,8 @@ params = GenerateParams(
 
 # Sidebar contents
 with st.sidebar:
-    st.title("RAG App")
-    
-uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
+    st.title("RAG App") 
+    uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
 
 @st.cache_data
 def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
@@ -77,33 +76,39 @@ def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
              docs = text_splitter.split_documents(data)
              return docs
 
-def read_push_embeddings():
-    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-    # embeddings = HuggingFaceEmbeddings()
-    temp_dir = tempfile.TemporaryDirectory()
+docs = read_pdf(uploaded_files)
+# st.write(docs)
+# embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+embeddings = HuggingFaceEmbeddings()
+# st.write(embeddings)
+if docs is not None:
     db = FAISS.from_documents(docs, embeddings)
-    return db
 
-# show user input
-if user_question := st.text_input(
-    "Ask a question about your Policy Document:"
-):
-    docs = read_pdf(uploaded_files)
-    db = read_push_embeddings()
-    docs = db.similarity_search(user_question)
-    params = GenerateParams(
-        decoding_method="greedy",
-        max_new_tokens=1000,
-        min_new_tokens=1,
-        # stream=True,
-        top_k=50,
-        top_p=1
-    )
+model = LangChainInterface(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+chain = load_qa_chain(model, chain_type="stuff")
 
-    model = LangChainInterface(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
-    chain = load_qa_chain(model, chain_type="stuff")
+temp_dir = tempfile.TemporaryDirectory()
+    
+with st.chat_message("system"):
+    st.write("please ask the document")
 
-    response = chain.run(input_documents=docs, question=user_question)
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    st.text_area(label="Model Response", value=response, height=100)
-    st.write()
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+if query := st.chat_input("your query"):
+    with st.chat_message("user"):
+        st.markdown(query)
+
+    st.session_state.messages.append({"role": "user", "content": query})
+    with st.spinner(text="In progress...", cache=False):
+        docs = db.similarity_search(query)
+        answer = chain.run(input_documents=docs, question=query)
+
+    st.session_state.messages.append({"role": "agent", "content": answer}) 
+
+    with st.chat_message("agent"):
+        st.markdown(answer)
