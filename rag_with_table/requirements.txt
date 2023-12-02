@@ -9,5 +9,5 @@ lxml
 langchainhub
 nltk
 pypdf
-FAISS-cpu
+FAISS-gpu
 sentence_transformers
