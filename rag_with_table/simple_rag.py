@@ -9,20 +9,21 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from langchain.document_loaders import PyPDFLoader
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 from genai.extensions.langchain import LangChainInterface
 from genai.credentials import Credentials
 from genai.schemas import GenerateParams
-from genai.model import Model
+# from genai.model import Model
 
 from langchain.callbacks import StdOutCallbackHandler
 from langchain.chains.question_answering import load_qa_chain
-from typing import Literal, Optional, Any
+# from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma, FAISS
+from langchain.vectorstores import Chroma 
+#, FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-import numpy as np
+# import numpy as np
 # Most GENAI logs are at Debug level.
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
@@ -81,13 +82,14 @@ def read_push_embeddings(docs):
     embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
     # embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
-    if os.path.exists(temp_dir+"/db.pickle"):
-        with open("db.pickle",'rb') as file_name:
+    filepath = os.path.join(pathlib.Path(temp_dir.name),'db.pickle')
+    if os.path.exists(filepath):
+        with open(filepath,'rb') as file_name:
             db = pickle.load(file_name)
     else:     
         db = Chroma.from_documents(docs, embeddings)
         # db = FAISS.from_documents(docs, embeddings)
-        with open(temp_dir+"/db.pickle",'wb') as file_name  :
+        with open(filepath,'wb') as file_name  :
              pickle.dump(db,file_name)
         st.write("\n")
     return db
