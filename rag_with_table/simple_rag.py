@@ -19,7 +19,7 @@ from langchain.callbacks import StdOutCallbackHandler
 from langchain.chains.question_answering import load_qa_chain
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain.vectorstores import Chroma, FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
@@ -59,25 +59,24 @@ params = GenerateParams(
 # Sidebar contents
 with st.sidebar:
     st.title("RAG App")
-    
-uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
+    uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
 
 @st.cache_data
 def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
     for uploaded_file in uploaded_files:
-      bytes_data = uploaded_file.read()
-      with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
-      # Write content to the temporary file
-          temp_file.write(bytes_data)
-          filepath = temp_file.name
-          with st.spinner('Waiting for the file to upload'):
-             loader = PyPDFLoader(filepath)
-             data = loader.load()
-             text_splitter = RecursiveCharacterTextSplitter(chunk_size= chunk_size, chunk_overlap=chunk_overlap)
-             docs = text_splitter.split_documents(data)
-             return docs
+        bytes_data = uploaded_file.read()
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
+        # Write content to the temporary file
+            temp_file.write(bytes_data)
+            filepath = temp_file.name
+            with st.spinner('Waiting for the file to upload'):
+                loader = PyPDFLoader(filepath)
+                data = loader.load()
+                text_splitter = RecursiveCharacterTextSplitter(chunk_size= chunk_size, chunk_overlap=chunk_overlap)
+                docs = text_splitter.split_documents(data)
+                return docs
 
-def read_push_embeddings():
+def read_push_embeddings(docs):
     embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
     # embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
@@ -85,7 +84,8 @@ def read_push_embeddings():
     return db
 
 docs = read_pdf(uploaded_files)
-db = read_push_embeddings()
+if docs is not None:
+    db = read_push_embeddings(docs)
 
 model = LangChainInterface(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 chain = load_qa_chain(model, chain_type="stuff")
