@@ -11,4 +11,5 @@ nltk
 pypdf
 # FAISS-cpu
 chromadb
+sqlite3 >= 3.35.0
 sentence_transformers
