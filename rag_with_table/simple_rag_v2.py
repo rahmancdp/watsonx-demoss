@@ -23,7 +23,7 @@ from langchain.vectorstores import Chroma, FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+# logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 st.set_page_config(
     page_title="Retrieval Augmented Generation",
@@ -31,7 +31,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-st.header("Retrieval Augmented Generation with watsonx.ai 💬")
+st.header("Retrieval Augmented Generation v2 with watsonx.ai 💬")
 # chunk_size=1500
 # chunk_overlap = 200
 
