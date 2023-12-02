@@ -83,7 +83,11 @@ with st.sidebar:
     st.write("SQL-to-SQL migration (TODO)")
     st.write("Text-to-SQL generation")
     st.write("SQL-to-Text understanding (TODO)")
-    st.write(f"table context {context}")
+    ip_address = st.text_input("ip address")
+    user_name = st.text_input("user name")
+    password = st.text_input("password")
+    database_name = st.text_input("database name")
+    st.code(f"table context {context}",language="SQL")
 
 with st.chat_message("system"):
     st.write("please input your query")
