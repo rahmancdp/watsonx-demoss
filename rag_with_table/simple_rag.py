@@ -80,7 +80,7 @@ def read_push_embeddings(docs):
     embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
     # embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
-    db = FAISS.from_documents(docs, embeddings)
+    db = Chroma.from_documents(docs, embeddings)
     return db
 
 docs = read_pdf(uploaded_files)
