@@ -9,5 +9,6 @@ lxml
 langchainhub
 nltk
 pypdf
-FAISS-cpu
+# FAISS-cpu
+chromadb
 sentence_transformers
