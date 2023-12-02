@@ -3,6 +3,7 @@ import logging
 import os
 import tempfile
 import pathlib
+import pickle
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -80,7 +81,15 @@ def read_push_embeddings(docs):
     embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
     # embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
-    db = Chroma.from_documents(docs, embeddings)
+    if os.path.exists(temp_dir+"/db.pickle"):
+        with open("db.pickle",'rb') as file_name:
+            db = pickle.load(file_name)
+    else:     
+        db = Chroma.from_documents(docs, embeddings)
+        # db = FAISS.from_documents(docs, embeddings)
+        with open(temp_dir+"/db.pickle",'wb') as file_name  :
+             pickle.dump(db,file_name)
+        st.write("\n")
     return db
 
 docs = read_pdf(uploaded_files)
