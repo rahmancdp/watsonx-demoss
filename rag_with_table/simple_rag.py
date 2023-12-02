@@ -7,7 +7,6 @@ import pathlib
 import streamlit as st
 from dotenv import load_dotenv
 
-from chromadb.api.types import EmbeddingFunction
 from langchain.document_loaders import PyPDFLoader
 from sentence_transformers import SentenceTransformer
 
