@@ -37,8 +37,6 @@ st.header("Retrieval Augmented Generation with watsonx.ai 💬")
 
 load_dotenv()
 
-load_dotenv()
-
 api_key = st.secrets["GENAI_KEY"]
 api_endpoint = st.secrets["GENAI_API"]
 
@@ -80,8 +78,8 @@ def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
              return docs
 
 def read_push_embeddings():
-    # embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-    embeddings = HuggingFaceEmbeddings()
+    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+    # embeddings = HuggingFaceEmbeddings()
     temp_dir = tempfile.TemporaryDirectory()
     db = FAISS.from_documents(docs, embeddings)
     return db
