@@ -23,7 +23,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+# logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 st.set_page_config(
     page_title="Retrieval Augmented Generation",
@@ -56,6 +56,12 @@ params = GenerateParams(
     top_p=1
 )
 
+# Sidebar contents
+with st.sidebar:
+    st.title("RAG App")
+    
+uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
+
 @st.cache_data
 def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
     for uploaded_file in uploaded_files:
@@ -70,22 +76,19 @@ def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
              text_splitter = RecursiveCharacterTextSplitter(chunk_size= chunk_size, chunk_overlap=chunk_overlap)
              docs = text_splitter.split_documents(data)
              return docs
-          
-# Sidebar contents
-with st.sidebar:
-    st.title("RAG App") 
-    uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
+
+def read_push_embeddings():
+    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+    # embeddings = HuggingFaceEmbeddings()
+    temp_dir = tempfile.TemporaryDirectory()
+    db = FAISS.from_documents(docs, embeddings)
+    return db
 
 docs = read_pdf(uploaded_files)
-embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-# embeddings = HuggingFaceEmbeddings()
-if docs is not None:
-    db = FAISS.from_documents(docs, embeddings)
+db = read_push_embeddings()
 
 model = LangChainInterface(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 chain = load_qa_chain(model, chain_type="stuff")
-
-temp_dir = tempfile.TemporaryDirectory()
     
 with st.chat_message("system"):
     st.write("please ask the document")
