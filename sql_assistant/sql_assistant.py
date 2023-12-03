@@ -54,7 +54,7 @@ llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=p
 
 connection = sqlite3.connect("sample.db")
 
-with open('https://sql-assistant.streamlit.app/app/static/Chinook_Sqlite.sql.sample', 'r') as sql_file:
+with open('https://sql-assistant.streamlit.app/app/static/Chinook_Sqlite.sql.txt', 'r') as sql_file:
     sql_script = sql_file.read()
 
 executesqlscript(sql_script)
