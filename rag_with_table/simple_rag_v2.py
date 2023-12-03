@@ -23,12 +23,12 @@ import numpy as np
 # logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 st.set_page_config(
-    page_title="Retrieval Augmented Generation",
+    page_title="技术支持助理",
     page_icon="🧊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-st.header("Retrieval Augmented Generation v2 with watsonx.ai 💬")
+st.header("技术支持助理 watsonx.ai 💬")
 # chunk_size=1500
 # chunk_overlap = 200
 
@@ -55,8 +55,8 @@ params = GenerateParams(
 
 # Sidebar contents
 with st.sidebar:
-    st.title("RAG App")
-    uploaded_files = st.file_uploader("Choose a PDF file", accept_multiple_files=True)
+    st.title("技术支持助理")
+    uploaded_files = st.file_uploader("上传一个PDF文档", accept_multiple_files=True)
 
 @st.cache_data
 def read_pdf(uploaded_files,chunk_size =250,chunk_overlap=20):
@@ -112,7 +112,7 @@ if docs is not None:
 model = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 with st.chat_message("system"):
-    st.write("please ask the document")
+    st.write("请输入你的查询")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
