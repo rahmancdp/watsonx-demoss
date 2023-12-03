@@ -10,13 +10,10 @@ from dotenv import load_dotenv
 from langchain.document_loaders import PyPDFLoader
 from sentence_transformers import SentenceTransformer
 
-from genai.extensions.langchain import LangChainInterface
 from genai.credentials import Credentials
 from genai.schemas import GenerateParams
 from genai.model import Model
 
-from langchain.callbacks import StdOutCallbackHandler
-from langchain.chains.question_answering import load_qa_chain
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma, FAISS
@@ -43,7 +40,7 @@ api_endpoint = st.secrets["GENAI_API"]
 api_key = os.getenv("GENAI_KEY", None)
 api_endpoint = os.getenv("GENAI_API", None)
 
-handler = StdOutCallbackHandler()
+# handler = StdOutCallbackHandler()
 
 creds = Credentials(api_key,api_endpoint)
 
@@ -83,13 +80,37 @@ def read_push_embeddings(docs):
     db = Chroma.from_documents(docs, embeddings)
     return db
 
+def querypdf(informations, question):
+    # prompt = f"""
+    # answer the question in 5 sentences base on the informations:
+    # informations:
+    # {informations}
+    # question:
+    # {question}
+    # answer in point form:"""
+
+    prompt = f"""[INST]作为一个工程师，请根据提供的白皮书回答。
+    <<SYS>>
+    白皮书:
+    {informations}
+    <<SYS>>
+    问题:
+    {question}
+    [/INST]
+    回答:"""
+
+    prompts = [prompt]
+    answer = ""
+    for response in model.generate_async(prompts,ordered=True):
+        answer += response.generated_text
+    return answer
+
 docs = read_pdf(uploaded_files)
 if docs is not None:
     db = read_push_embeddings(docs)
 
-model = LangChainInterface(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
-chain = load_qa_chain(model, chain_type="stuff")
-    
+model = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+
 with st.chat_message("system"):
     st.write("please ask the document")
 
@@ -107,7 +128,7 @@ if query := st.chat_input("your query"):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.spinner(text="In progress...", cache=False):
         docs = db.similarity_search(query)
-        answer = chain.run(input_documents=docs, question=query)
+        answer = querypdf(docs, query)
 
     st.session_state.messages.append({"role": "agent", "content": answer}) 
 
