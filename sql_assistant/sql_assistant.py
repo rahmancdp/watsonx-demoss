@@ -54,10 +54,10 @@ llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=p
 
 connection = sqlite3.connect("sample.db")
 
-with open('https://sql-assistant.streamlit.app/app/static/Chinook_Sqlite.sql.txt', 'r') as sql_file:
-    sql_script = sql_file.read()
+# with open('static/Chinook_Sqlite.sql.txt', 'r') as sql_file:
+#     sql_script = sql_file.read()
 
-executesqlscript(sql_script)
+# executesqlscript(sql_script)
 
 context = """
 CREATE TABLE [Album]
@@ -202,6 +202,8 @@ CREATE TABLE [Track]
 );
 """
 
+executesqlscript(context)
+
 # context = '''table:
 # cs_customers (
 #  c_id int
@@ -220,7 +222,7 @@ CREATE TABLE [Track]
 #  o_date datetime)'''
 
 def buildpromptforquery(query,context):
-    return f"""[INST]as database admin, please generate SQL for following query in backquoted.
+    return f"""[INST]as database admin of sqlite, please generate SQL for following query in backquoted.
 <<SYS>>
 notes:
 - please follow the scheme.
