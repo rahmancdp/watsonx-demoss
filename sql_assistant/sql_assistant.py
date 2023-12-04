@@ -13,6 +13,7 @@ from genai.model import Model
 import tempfile
 import pathlib
 import re
+import json
 
 import sqlite3
 
@@ -46,7 +47,7 @@ params = GenerateParams(
     # stream=True,
     top_k=50,
     top_p=1,
-    stop_sequences=[";","\n\n"],
+    stop_sequences=['"}','\n\n'],
 )
 
 # llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
@@ -16086,8 +16087,12 @@ notes:
 scheme:`{context}`
 <<SYS>>
 query:`{query}`
+json:{{
+sql:
+explaination:
+}}
 [/INST]
-SQL:"""
+json:"""
 
 def executesql(sql):
     try:
@@ -16146,13 +16151,16 @@ if query := st.chat_input("your query"):
 
     st.session_state.messages.append({"role": "sql assistant", "content": answer}) 
     with st.chat_message("sql assistant"):
-        st.markdown(answer)
+        sqlexec = json.loads(answer)['sql']
+        explaination = json.loads(answer)['explaination']
+        st.markdown(f'sql:{sqlexec}')
+        st.markdown(f'explaination:{explaination}')
 
-    sqlexec = answer.replace('```','')
+    sqlexec = json.loads(answer)['sql']
 
     # if st.button("execute"):
     st.write(f"execute: -{sqlexec}-")
-    # with st.spinner(text="In progress...", cache=False):
-    results = executesql(sqlexec)
-    st.write('result---')
-    st.table(results)
+    with st.spinner(text="In progress...", cache=False):
+        results = executesql(sqlexec)
+        st.write('result---')
+        st.table(results)
