@@ -15913,8 +15913,6 @@ INSERT INTO [PlaylistTrack] ([PlaylistId], [TrackId]) VALUES (17, 3290);
 INSERT INTO [PlaylistTrack] ([PlaylistId], [TrackId]) VALUES (18, 597);
 """
 
-executesqlscript(sql_script)
-
 context = """
 CREATE TABLE [Album]
 (
@@ -16123,6 +16121,9 @@ with st.sidebar:
     # user_name = st.text_input("user name")
     # password = st.text_input("password")
     # database_name = st.text_input("database name")
+    if st.button("populate data"):
+        with st.spinner(text="In progress...", cache=False):
+            executesqlscript(sql_script)
     st.code(f"table scheme {context}",language="SQL")
 
 with st.chat_message("system"):
