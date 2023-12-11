@@ -550,13 +550,6 @@ java:`{code}`
 [/INST]
 review:"""
 
-step0 = """[INST]as code reviewer, help review the following java code, locate the problem and give advise.
-<<SYS>>
-java:`{code}`
-<<SYS>>
-[/INST]
-review:"""
-
 def splitcode(unchecked_code):
     totallen = len(unchecked_code)
     print(totallen)
@@ -572,7 +565,14 @@ def splitcode(unchecked_code):
 def reviewer(filename,unchecked_code):
     
     steps = [cotstep1,cotstep2, cotstep3,cotstep4,cotstep5,cotstep6,cotstep7,cotstep8]
-    steps_list = ["Rule#1 Transcation Check", "Rule#2 Log Check", "Rule#3 Object Return Check", "Rule#4 Map Return Check", "Rule#5 Swagger Annoation Check", "Rule#6 Magic Value Check", "Rule#7 Naming Convension Check","Rule#8 Comment Check"]
+    steps_list = ["Rule#1 Transcation Check", 
+                  "Rule#2 Log Check", 
+                  "Rule#3 Object Return Check", 
+                  "Rule#4 Map Return Check", 
+                  "Rule#5 Swagger Annoation Check", 
+                  "Rule#6 Magic Value Check", 
+                  "Rule#7 Naming Convension Check",
+                  "Rule#8 Comment Check"]
 
     for promptitr, desc in zip(steps,steps_list):
         st.markdown('#### '+desc)
@@ -587,7 +587,7 @@ def reviewer(filename,unchecked_code):
         with st.spinner('Reviewing'):
             for response in llmllama.generate_async(prompts):
                 if response is not None:
-                    checked_code += response.generated_text
+                    checked_code += response.generated_text.replace("<end-fo-code>","")
 
         summary = ""
         with st.spinner('Reviewing'):
