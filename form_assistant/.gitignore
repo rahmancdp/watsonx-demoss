@@ -1,0 +1,8 @@
+.env
+sample.txt
+category.txt
+.chroma
+.streamlit
+db.pickle
+*.xml
+*.sql
