@@ -29,6 +29,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.markdown(
+    """
+    <style>
+        section[data-testid="stSidebar"] {
+            width: 500px !important; # Set the width to your desired value
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.markdown("""
     <style>
         .reportview-container {
@@ -96,11 +107,26 @@ params = GenerateParams(
     stop_sequences=['<EOS>']
 )
 
-def buildform(requirement):
+def buildjson(requirement):
     prompt = f"""[INST]
-    build a html form that for customer to input data for following requirement.
+    build a json structure for customer to input data for following requirement.
     end with <EOS>
     <<SYS>>requirements: {requirement}
+    <<SYS>>
+    [/INST]json:"""
+    output = ""
+    for response in model.generate([prompt]):
+        output = response.generated_text
+    return output.replace("<EOS>","")
+
+def buildform(requirement, jsonform):
+    prompt = f"""[INST]
+    build a html form that for customer to input value for following json base on the requirement.
+    dont show JSON.
+    end with <EOS>
+    <<SYS>>
+    requirement: {requirement}
+    json: `{jsonform}`
     <<SYS>>
     [/INST]html form:"""
     output = ""
@@ -108,27 +134,38 @@ def buildform(requirement):
         output = response.generated_text
     return output.replace("<EOS>","")
 
-def buildquestions(requirement):
-    prompt = f"""[INST]
-    build a few question to ask input for following requirements.
+def buildquestions(requirement,answerjson):
+    prompt = f"""[INST]you are customer service agent that need to guide the user to fill the form with following steps:
+    1. list all answer with no value.
+    2. for those non-answer item, create a question, be aware of the requriements provided.
+    3. say thank you if no questions.
+    note: 
+    the question be polite, precise, simple, and you can provide example hints if not yet hv value.
+    dont show explaination.
+    dont ask question if item value in answer value exist.
     end with <EOS>
     <<SYS>>requirements: {requirement}
+    answer in json: `{answerjson}`
     <<SYS>>
-    [/INST]questions:"""
+    [/INST]output:"""
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
     return output.replace("<EOS>","")
 
-def buildanswer(answer, requirement):
+def buildanswer(answer, existinganswer, jsonform):
     prompt = f"""[INST]
-    extract the answer in json from the answer to response to following requirements.
+    extract the answer in json from the answer to response to the json form.
+    notes:
+    merge the answer with existing answer.
+    show the merged answer only.
     end with <EOS>
     <<SYS>>
     answers: {answer}
-    requirements: {requirement}
+    existing answers: `{existinganswer}`
+    json form: {jsonform}
     <<SYS>>
-    [/INST]answer in json:"""
+    [/INST]merged answer:"""
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
@@ -136,13 +173,14 @@ def buildanswer(answer, requirement):
 
 def fillform(answer, form):
     prompt = f"""[INST]
-    populate the answer value in json to the html form.
+    fill the html form with the answer value in json.
+    dont show json.
     end with <EOS>
     <<SYS>>
-    answer: {answer}
-    form: {form}
+    answer: `{answer}`
+    html form: {form}
     <<SYS>>
-    [/INST]output:"""
+    [/INST]html form with answer:"""
 
     output = ""
     for response in model.generate([prompt]):
@@ -151,16 +189,12 @@ def fillform(answer, form):
 
 model = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
-# Sidebar contents
-with st.sidebar:
-    st.title("form assistant")
-
-    btBuildForm = st.button("build form")
-    btBuildQuestions = st.button("build questions")
-    btFillForm = st.button("fill form")
 
 if "requirement" not in st.session_state:
     st.session_state.requirement = ""
+
+if "jsonform" not in st.session_state:
+    st.session_state.jsonform = ""
 
 if "form" not in st.session_state:
     st.session_state.form = ""
@@ -174,21 +208,27 @@ if "answer" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Sidebar contents
+with st.sidebar:
+    st.title("form assistant")
+
+    btBuildForm = st.button("build form")
+    btBuildQuestions = st.button("guide form filling with questions")
+    # btFillForm = st.button("fill form")
+
 st.session_state.requirement = st.text_area("requirement",height=10)
 
 if btBuildForm:
     with st.spinner(text="building the form...", cache=False):
-        form = buildform(st.session_state.requirement)
+        jsonform = buildjson(st.session_state.requirement)
+        form = buildform(st.session_state.requirement, st.session_state.jsonform)
+        st.session_state.jsonform = jsonform
         st.session_state.form = form
         st.session_state.filledform = form
 
-if btFillForm:
-    with st.spinner(text="building the form...", cache=False):
-        st.session_state.filledform = fillform(st.session_state.answer, st.session_state.form)
-        # st.components.v1.html(filledform)
-
-if st.session_state.filledform != "":
-    st.components.v1.html(st.session_state.filledform)
+# if btFillForm:
+#     with st.spinner(text="building the form...", cache=False):
+#         st.session_state.filledform = fillform(st.session_state.answer, st.session_state.form)
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -197,7 +237,7 @@ for message in st.session_state.messages:
 if btBuildQuestions:
     with st.chat_message("system"):
         with st.spinner(text="building the questions...", cache=False):
-            questions = buildquestions(st.session_state.requirement)
+            questions = buildquestions(st.session_state.answer,st.session_state.requirement)
             st.markdown(questions)
             st.session_state.messages.append({"role": "agent", "content": questions})
 
@@ -207,13 +247,18 @@ if answer := st.chat_input("your answer"):
 
     st.session_state.messages.append({"role": "user", "content": answer})
     with st.spinner(text="In progress...", cache=False):
-        answerjson = buildanswer(answer, st.session_state.requirement)
-
-    st.session_state.messages.append({"role": "agent", "content": answerjson}) 
-    st.session_state.answer = answerjson
-    with st.spinner(text="In progress...", cache=False):
+        answerjson = buildanswer(answer, st.session_state.answer, st.session_state.jsonform)
+        st.session_state.answer = answerjson
         filledform = fillform(st.session_state.answer, st.session_state.form)
         st.session_state.filledform = filledform
 
-    with st.chat_message("agent"):
-        st.markdown(answerjson)
+    with st.chat_message("system"):
+        with st.spinner(text="building the questions...", cache=False):
+            questions = buildquestions(st.session_state.answer,st.session_state.requirement)
+            st.markdown(questions)
+            st.session_state.messages.append({"role": "agent", "content": questions})
+
+with st.sidebar:
+    with st.container(border=True):
+        st.components.v1.html(st.session_state.filledform,height=300)
+    st.code(st.session_state.answer,language="json")
