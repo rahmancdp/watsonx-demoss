@@ -99,72 +99,86 @@ creds = Credentials(api_key,api_endpoint)
 
 params = GenerateParams(
     decoding_method="greedy",
-    max_new_tokens=3000,
+    max_new_tokens=1000,
     min_new_tokens=1,
+    temperature=0.05,
+    repetition_penalty=1.1,
     # stream=True,
     top_k=50,
     top_p=1,
-    stop_sequences=['<EOS>']
+    stop_sequences=['end_of_form','<>','<EOS>'],
 )
 
 def buildjson(requirement):
     prompt = f"""[INST]
-    build a json structure for customer to input data for following requirement.
-    end with <EOS>
-    <<SYS>>requirements: {requirement}
     <<SYS>>
+    build a json structure for customer to input data for following requirement.
+    - flatten the json structure.
+    - end with <EOS>
+    <</SYS>>
+    requirements: {requirement}
     [/INST]json:"""
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
-    return output.replace("<EOS>","")
+    return output.replace("end_of_form","")
 
 def buildform(requirement, jsonform):
     prompt = f"""[INST]
-    build a html form that for customer to input value for following json base on the requirement.
-    dont show JSON.
-    end with <EOS>
     <<SYS>>
+    build a html form that for customer to input value for following json base on the requirement.
+    - for option, add a empty item if no value.
+    - dont show JSON.
+    - end with <EOS>
+    <</SYS>>
     requirement: {requirement}
     json: `{jsonform}`
-    <<SYS>>
     [/INST]html form:"""
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
-    return output.replace("<EOS>","")
+    return output.replace("<end_of_form>","")
 
-def buildquestions(requirement,answerjson):
-    prompt = f"""[INST]you are customer service agent that need to guide the user to fill the form with following steps:
-    1. list all answer with no value.
-    2. for those non-answer item, create a question, be aware of the requriements provided.
-    3. say thank you if no questions.
+def buildquestions(answerjson, requirement, lastmessage):
+    prompt = f"""[INST]
+    <<SYS>>you are customer service agent, generate message to guiding the user to fill the form with following steps:
+    1. understand the answer and requriement provided in backquoted.
+    2. check the answer json, gather a list the answer fields with empty value.
+    3. if no field shortlisted in step 2, then just say thank you and skip step 4.
+    4. for all field shortlisted in step 2, generate a concise question to request the answer.
+    5. generate message with style similar to the last message provided in backquoted.
     note: 
-    the question be polite, precise, simple, and you can provide example hints if not yet hv value.
-    dont show explaination.
-    dont ask question if item value in answer value exist.
-    end with <EOS>
-    <<SYS>>requirements: {requirement}
-    answer in json: `{answerjson}`
-    <<SYS>>
-    [/INST]output:"""
+    - empty value means empty string or zero or false or none.
+    - dont repeat.
+    - dont show (empty)
+    - dont show json.
+    <</SYS>>
+    requirements: `{requirement}`
+    answer: {answerjson}
+    last message: `{lastmessage}`
+    [/INST]response:"""
+
+    # print("prompt:"+prompt)
+
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
+    # print(output)
     return output.replace("<EOS>","")
 
 def buildanswer(answer, existinganswer, jsonform):
     prompt = f"""[INST]
+    <<SYS>>
     extract the answer in json from the answer to response to the json form.
     notes:
-    merge the answer with existing answer.
-    show the merged answer only.
-    end with <EOS>
-    <<SYS>>
+    - merge the answer with existing answer.
+    - dont guess.
+    - show the merged answer only.
+    - end with <EOS>
+    <</SYS>>
     answers: {answer}
-    existing answers: `{existinganswer}`
+    existing answers: {existinganswer}
     json form: {jsonform}
-    <<SYS>>
     [/INST]merged answer:"""
     output = ""
     for response in model.generate([prompt]):
@@ -173,20 +187,24 @@ def buildanswer(answer, existinganswer, jsonform):
 
 def fillform(answer, form):
     prompt = f"""[INST]
-    fill the html form with the answer value in json.
-    dont show json.
-    end with <EOS>
     <<SYS>>
+    fill the html form with the answer value in json.
+    - for option, add a empty item if no value. select empty item if the field has empty value.
+    - dont show json.
+    - end with <EOS>
+    <</SYS>>
     answer: `{answer}`
     html form: {form}
-    <<SYS>>
     [/INST]html form with answer:"""
+
+    print(prompt)
 
     output = ""
     for response in model.generate([prompt]):
         output = response.generated_text
     return output.replace("<EOS>","")
 
+# model = Model(model="mistralai/mistral-7b-instruct-v0-2",credentials=creds, params=params)
 model = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 
@@ -205,6 +223,9 @@ if "filledform" not in st.session_state:
 if "answer" not in st.session_state:
     st.session_state.answer = ""
 
+if "lastmessage" not in st.session_state:
+    st.session_state.lastmessage = ""
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -212,11 +233,15 @@ if "messages" not in st.session_state:
 with st.sidebar:
     st.title("form assistant")
 
-    btBuildForm = st.button("build form")
-    btBuildQuestions = st.button("guide form filling with questions")
+    btBuildForm = st.button("build form and guide me to fill")
+    # btBuildQuestions = st.button("guide form filling with questions")
     # btFillForm = st.button("fill form")
 
 st.session_state.requirement = st.text_area("requirement",height=10)
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 if btBuildForm:
     with st.spinner(text="building the form...", cache=False):
@@ -225,21 +250,26 @@ if btBuildForm:
         st.session_state.jsonform = jsonform
         st.session_state.form = form
         st.session_state.filledform = form
+        st.session_state.answer = jsonform
+
+    with st.chat_message("system"):
+        with st.spinner(text="building the questions...", cache=False):
+            questions = buildquestions("{}",st.session_state.requirement,"").replace('\\n', '\n').replace('\\t', '\t')
+            st.session_state.lastmessage = questions
+            st.markdown(questions)
+            st.session_state.messages.append({"role": "agent", "content": questions})
+
 
 # if btFillForm:
 #     with st.spinner(text="building the form...", cache=False):
 #         st.session_state.filledform = fillform(st.session_state.answer, st.session_state.form)
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if btBuildQuestions:
-    with st.chat_message("system"):
-        with st.spinner(text="building the questions...", cache=False):
-            questions = buildquestions(st.session_state.answer,st.session_state.requirement)
-            st.markdown(questions)
-            st.session_state.messages.append({"role": "agent", "content": questions})
+# if btBuildQuestions:
+#     with st.chat_message("system"):
+#         with st.spinner(text="building the questions...", cache=False):
+#             questions = buildquestions("{}",st.session_state.requirement).replace('\\n', '\n').replace('\\t', '\t')
+#             st.markdown(questions)
+#             st.session_state.messages.append({"role": "agent", "content": questions})
 
 if answer := st.chat_input("your answer"):
     with st.chat_message("user"):
@@ -254,7 +284,7 @@ if answer := st.chat_input("your answer"):
 
     with st.chat_message("system"):
         with st.spinner(text="building the questions...", cache=False):
-            questions = buildquestions(st.session_state.answer,st.session_state.requirement)
+            questions = buildquestions(st.session_state.answer,st.session_state.requirement,st.session_state.lastmessage).replace('\\n', '\n').replace('\\t', '\t')
             st.markdown(questions)
             st.session_state.messages.append({"role": "agent", "content": questions})
 
