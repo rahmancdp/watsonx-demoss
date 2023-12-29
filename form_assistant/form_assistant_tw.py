@@ -10,9 +10,10 @@ from dotenv import load_dotenv
 from langchain.document_loaders import PyPDFLoader
 from sentence_transformers import SentenceTransformer
 
-from genai.credentials import Credentials
-from genai.schemas import GenerateParams
-from genai.model import Model
+from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
+from ibm_watson_machine_learning.foundation_models import Model
+from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
+from ibm_watson_machine_learning.foundation_models.extensions.langchain import WatsonxLLM
 
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -89,23 +90,25 @@ st.header("報稅助手 with watsonx.ai 💬")
 
 load_dotenv()
 
-api_key = st.secrets["GENAI_KEY"]
-api_endpoint = st.secrets["GENAI_API"]
+api_key = st.secrets["API_KEY"]
+project_id = st.secrets["PROJECT_ID"]
 
-api_key = os.getenv("GENAI_KEY", None)
-api_endpoint = os.getenv("GENAI_API", None)
+api_key = os.getenv("API_KEY", None)
+project_id = os.getenv("PROJECT_ID", None)
 
-creds = Credentials(api_key,api_endpoint)
+creds = {
+    "url"    : "https://us-south.ml.cloud.ibm.com",
+    "apikey" : api_key
+}
 
-params = GenerateParams(
-    decoding_method="greedy",
-    max_new_tokens=3000,
-    min_new_tokens=1,
-    # stream=True,
-    top_k=50,
-    top_p=1,
-    stop_sequences=['<EOS>']
-)
+params = {
+    GenParams.DECODING_METHOD:"greedy",
+    GenParams.MAX_NEW_TOKENS:3000,
+    GenParams.MIN_NEW_TOKENS:1,
+    GenParams.TOP_K:50,
+    GenParams.TOP_P:1,
+    GenParams.STOP_SEQUENCES:['<EOS>'],
+}
 
 def buildjson(requirement):
     prompt = f"""[INST]
@@ -115,8 +118,8 @@ def buildjson(requirement):
     <<SYS>>
     [/INST]json格式:"""
     output = ""
-    for response in model.generate([prompt]):
-        output = response.generated_text
+    for response in model.generate_text([prompt]):
+        output = response
     return output.replace("<EOS>","")
 
 def buildform(requirement, jsonform):
@@ -130,8 +133,8 @@ def buildform(requirement, jsonform):
     <<SYS>>
     [/INST]html表格:"""
     output = ""
-    for response in model.generate([prompt]):
-        output = response.generated_text
+    for response in model.generate_text([prompt]):
+        output = response
     return output.replace("<EOS>","")
 
 def buildquestions(requirement,answerjson):
@@ -149,8 +152,8 @@ def buildquestions(requirement,answerjson):
     <<SYS>>
     [/INST]引導問題列表:"""
     output = ""
-    for response in model.generate([prompt]):
-        output = response.generated_text
+    for response in model.generate_text([prompt]):
+        output = response
     return output.replace("<EOS>","")
 
 def buildanswer(answer, existinganswer, jsonform):
@@ -166,8 +169,8 @@ def buildanswer(answer, existinganswer, jsonform):
     <<SYS>>
     [/INST]合併的答案:"""
     output = ""
-    for response in model.generate([prompt]):
-        output = response.generated_text
+    for response in model.generate_text([prompt]):
+        output = response
     return output.replace("<EOS>","")
 
 def fillform(answer, form):
@@ -182,11 +185,11 @@ def fillform(answer, form):
     [/INST]含答案的html表格:"""
 
     output = ""
-    for response in model.generate([prompt]):
-        output = response.generated_text
+    for response in model.generate_text([prompt]):
+        output = response
     return output.replace("<EOS>","")
 
-model = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+model = Model("meta-llama/llama-2-70b-chat",creds, params, project_id)
 
 
 if "requirement" not in st.session_state:
