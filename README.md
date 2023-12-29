@@ -24,9 +24,9 @@ update the API call to IBM public cloud version.
     - jupyter notebook version
     - streamlit version
 11. rag with table leverage unstructured
-12. form assistant
+12. form assistant (in english and chinese version)
     - build form base on requirement
-    - guild to fill the form (TODO)
+    - guild to fill the form
     - validate the form (TODO)
 13. quiz assistant
     - generate question base on document (TODO)
