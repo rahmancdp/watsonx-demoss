@@ -8,6 +8,7 @@ update the API call to IBM public cloud version.
 2. data ingestor to milvus
 3. bot to bot conversation on pros and cons
 4. question and answer with rag
+    - ask doc - provide a PDF, and ask about it
 5. chatbot by streamit with watsonx
 6. code assist
     - 6.1 SOAP to RESTFUL conversion, handle larger SOAP with splitter
@@ -35,3 +36,5 @@ update the API call to IBM public cloud version.
     - get summary
     - get key information (TODO)
     - generate test case (TODO)
+15. tuning
+    - prompt tuning
