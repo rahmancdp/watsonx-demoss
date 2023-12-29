@@ -86,12 +86,6 @@ st.header("技术支持")
 
 load_dotenv()
 
-# api_key = st.secrets["GENAI_KEY"]
-# api_endpoint = st.secrets["GENAI_API"]
-
-# api_key = os.getenv("GENAI_KEY", None)
-# api_endpoint = os.getenv("GENAI_API", None)
-
 api_key = os.getenv("API_KEY", None)
 project_id = os.getenv("PROJECT_ID", None)
 
@@ -110,17 +104,6 @@ params = {
     GenParams.TOP_K:50,
     GenParams.TOP_P:1
 }
-
-# creds = Credentials(api_key,api_endpoint)
-
-# params = GenerateParams(
-#     decoding_method="greedy",
-#     max_new_tokens=1000,
-#     min_new_tokens=1,
-#     # stream=True,
-#     top_k=50,
-#     top_p=1
-# )
 
 # Sidebar contents
 with st.sidebar:
