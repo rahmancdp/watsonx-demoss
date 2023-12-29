@@ -6,9 +6,10 @@ from pptx.enum.lang import MSO_LANGUAGE_ID
 
 from docx import Document
 
-from genai.credentials import Credentials
-from genai.schemas import GenerateParams
-from genai.model import Model
+from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
+from ibm_watson_machine_learning.foundation_models import Model
+from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
+from ibm_watson_machine_learning.foundation_models.extensions.langchain import WatsonxLLM
 
 import tempfile
 import pathlib
@@ -32,30 +33,32 @@ def executesqlscript(sql):
 
 load_dotenv()
 
-api_key = st.secrets["GENAI_KEY"]
-api_endpoint = st.secrets["GENAI_API"]
+api_key = st.secrets["API_KEY"]
+project_id = st.secrets["PROJECT_ID"]
 
-api_key = os.getenv("GENAI_KEY", None)
-api_endpoint = os.getenv("GENAI_API", None)
+api_key = os.getenv("API_KEY", None)
+project_id = os.getenv("PROJECT_ID", None)
 
-creds = Credentials(api_key,api_endpoint)
+creds = {
+    "url"    : "https://us-south.ml.cloud.ibm.com",
+    "apikey" : api_key
+}
 
-params = GenerateParams(
-    decoding_method="greedy",
-    max_new_tokens=1000,
-    min_new_tokens=1,
-    # stream=True,
-    top_k=50,
-    top_p=1,
-    stop_sequences=['"}','\n\n'],
-)
+params = {
+    GenParams.DECODING_METHOD:"greedy",
+    GenParams.MAX_NEW_TOKENS:1000,
+    GenParams.MIN_NEW_TOKENS:1,
+    GenParams.TOP_K:50,
+    GenParams.TOP_P:1,
+    GenParams.STOP_SEQUENCES:['"}','\n\n'],
+}
 
-# llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
-llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+
+llmllama = Model("meta-llama/llama-2-70b-chat",creds, params, project_id)
 
 connection = sqlite3.connect("sample.db")
 
-sql_script = open("static/Chinook_Sqlite.sql.txt",'r').readlines()
+sql_script = open("static/Chinook_Sqlite.sql.txt",'r').read()
 
 context = """
 CREATE TABLE [Album]
@@ -250,9 +253,8 @@ def executesql(sql):
 def querytosql(query,context):
     prompts = [buildpromptforquery(query,context)]
     SQL = ""
-    for response in llmllama.generate(prompts):
-    #,ordered=True):
-        SQL += response.generated_text
+    for response in llmllama.generate_text(prompts):
+        SQL += response
     return SQL
 
 temp_dir = tempfile.TemporaryDirectory()
@@ -292,15 +294,16 @@ if query := st.chat_input("your query"):
     with st.spinner(text="In progress...", cache=False):
         answer = querytosql(query,context)
 
-    st.session_state.messages.append({"role": "sql assistant", "content": answer}) 
+    sqlexec = json.loads(answer)['sql']
+    explaination = json.loads(answer)['explaination']
+
+    st.session_state.messages.append({"role": "sql assistant", "content": sqlexec}) 
+    st.session_state.messages.append({"role": "sql assistant", "content": explaination}) 
     with st.chat_message("sql assistant"):
-        sqlexec = json.loads(answer)['sql']
-        explaination = json.loads(answer)['explaination']
         st.markdown(f'sql:{sqlexec}')
         st.markdown(f'explaination:{explaination}')
 
-    sqlexec = json.loads(answer)['sql']
-
+    
     # if st.button("execute"):
     st.write(f"execute: -{sqlexec}-")
     with st.spinner(text="In progress...", cache=False):
