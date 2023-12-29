@@ -7,7 +7,7 @@ update the API call to IBM public cloud version.
 1. text summarizar with watsonx
 2. data ingestor to milvus
 3. bot to bot conversation on pros and cons
-4. question and answer with rag
+4. ask doc with rag
     - ask doc - provide a PDF, and ask about it
 5. chatbot by streamit with watsonx
 6. code assist
