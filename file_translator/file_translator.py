@@ -42,14 +42,12 @@ params = {
 llm = Model("meta-llama/llama-2-13b-chat",creds, params,project_id)
 
 def buildprompt(text,sourcelang,targetlang):
-    prompt = f"""[INST]you are a translator, and need to process a json file.
-    -for each field in json, translate the field value in {sourcelang} language to {targetlang} language:
-    -dont translate the field name.
+    prompt = f"""[INST]you are a translator, translate the backquoted list in {sourcelang} language to {targetlang} language:
     -dont show note.
-    -show the json only.
+    -show the list only.
     [/INST]
-    {sourcelang} json:{text}
-    {targetlang} json:"""
+    {sourcelang} list: `{text}`
+    {targetlang} list:"""
     # print(prompt)
     return prompt
 
@@ -85,53 +83,55 @@ def translate_ppt(pptfile,sourcelang,targetlang):
         st.write(f'Slide {slide_number} of {len(presentation.slides)}')
         slide_number += 1
 
-        context = {}
+        srclist = []
 
         # translate comments
         if slide.has_notes_slide:
             text_frame = slide.notes_slide.notes_text_frame
             if len(text_frame.text) > 0:
-                context[text_frame.text] = text_frame.text
+                srclist += [text_frame.text]
 
         # translate other texts
         for shape in slide.shapes:
             if shape.has_table:
                 for cell in shape.table.iter_cells():
-                    context[cell.text] = cell.text
+                    srclist += [cell.text]
 
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     for index, paragraph_run in enumerate(paragraph.runs):
-                        context[paragraph_run.text] = paragraph_run.text
+                        srclist += [paragraph_run.text]
 
-        # print(context)
+        # print(srclist)
 
-        prompt = buildprompt(str(context),sourcelang,targetlang)
+        prompt = buildprompt("<>".join(srclist),sourcelang,targetlang)
         allresp = ""
         for response in llm.generate_text([prompt]):
             print(response)
             allresp += response
-        print(allresp)
+        # print(allresp)
         
-        contextout = ast.literal_eval(allresp)
+        targetlist = allresp.split('<>')
+
+        langmap = dict(map(lambda i,j : (i,j) , srclist,targetlist))
 
         # translate comments
         if slide.has_notes_slide:
             text_frame = slide.notes_slide.notes_text_frame
             if len(text_frame.text) > 0:
-                slide.notes_slide.notes_text_frame.text = contextout[text_frame.text]
+                slide.notes_slide.notes_text_frame.text = langmap[text_frame.text]
 
 
         # translate other texts
         for shape in slide.shapes:
             if shape.has_table:
                 for cell in shape.table.iter_cells():
-                    cell.text = contextout[cell.text]
+                    cell.text = langmap[cell.text]
 
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     for index, paragraph_run in enumerate(paragraph.runs):
-                        paragraph.runs[index].text = contextout[paragraph_run.text]
+                        paragraph.runs[index].text = langmap[paragraph_run.text]
                         # paragraph.runs[index].font.language_id = targetlang
 
     output_file_path = pptfile.replace('.pptx', f'-{targetlang}.pptx')
