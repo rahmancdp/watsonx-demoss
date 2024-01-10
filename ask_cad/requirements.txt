@@ -1,0 +1,14 @@
+python-pptx
+python-docx
+ibm-generative-ai
+streamlit-code-editor
+langchain
+unstructured
+pydantic
+lxml
+langchainhub
+nltk
+pypdf
+# FAISS-cpu
+chromadb==0.3.29
+sentence_transformers

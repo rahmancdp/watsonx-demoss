@@ -1,0 +1,119 @@
+generate html file include 3d model, leverage three.js, that render a iron cube and rubber cylinder
+- generate the html only
+input: generate a 3d cube
+output:
+```
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Three.js Cube</title>
+    <style>
+      body { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
+    <script>
+      // Create a scene
+      const scene = new THREE.Scene();
+
+      // Create a camera
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      // Create a renderer
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a cube geometry
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+      // Create a basic material with a red color
+      const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+      // Create a mesh using the geometry and material
+      const cube = new THREE.Mesh(geometry, material);
+
+      // Add the cube to the scene
+      scene.add(cube);
+
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate the cube
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+
+        // Render the scene with the camera
+        renderer.render(scene, camera);
+      }
+
+      // Start the animation loop
+      animate();
+    </script>
+  </body>
+</html>
+```
+input: generate a cylinder
+output:
+```
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Three.js Cylinder</title>
+    <style>
+      body { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
+    <script>
+      // Create a scene
+      const scene = new THREE.Scene();
+
+      // Create a camera
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      // Create a renderer
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a cylinder geometry
+      const geometry = new THREE.CylinderGeometry(1, 1, 2, 32);
+
+      // Create a basic material with a red color
+      const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+      // Create a mesh using the geometry and material
+      const cylinder = new THREE.Mesh(geometry, material);
+
+      // Add the cylinder to the scene
+      scene.add(cylinder);
+
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate the cylinder
+        cylinder.rotation.x += 0.01;
+        cylinder.rotation.y += 0.01;
+
+        // Render the scene with the camera
+        renderer.render(scene, camera);
+      }
+
+      // Start the animation loop
+      animate();
+    </script>
+  </body>
+</html>
+```
+input: generate a sphere and a cube
+output:
+```

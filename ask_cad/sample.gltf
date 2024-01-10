@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Blender glTF Exporter"
+  },
+  "scenes": [{
+    "nodes": [0]
+  }],
+  "nodes": [{
+    "name": "Car",
+    "mesh": 0,
+    "children": [1, 2, 3, 4]
+  }, {
+    "name": "Wheel1",
+    "mesh": 1,
+    "translation": [-1, -1, -0.75]
+  }, {
+    "name": "Wheel2",
+    "mesh": 1,
+    "translation": [1, -1, -0.75]
+  }, {
+    "name": "Wheel3",
+    "mesh": 1,
+    "translation": [-1, 1, -0.75]
+  }, {
+    "name": "Wheel4",
+    "mesh": 1,
+    "translation": [1, 1, -0.75]
+  }],
+  "meshes": [{
+    "primitives": [{
+      "attributes": {
+        "POSITION": 0,
+        "NORMAL": 1,
+        "TEXCOORD_0": 2
+      },
+      "material": 0
+    }]
+  }],
+  "accessors": [{
+    "bufferView": 0,
+    "byteOffset": 0,
+    "componentType": 5126,
+    "count": 24,
+    "type": "VEC3",
+    "max": [1, 1, 0.5],
+    "min": [-1, -1, -0.5]
+  }],
+  "bufferViews": [{
+    "buffer": 0,
+    "byteOffset": 0,
+    "byteLength": 288,
+    "target": 34962
+  }],
+  "buffers": [{
+    "byteLength": 288,
+    "uri": "car.bin"
+  }],
+  "materials": [{
+    "pbrMetallicRoughness": {
+      "baseColorFactor": [1, 1, 0, 1]
+    }
+  }]
+}
