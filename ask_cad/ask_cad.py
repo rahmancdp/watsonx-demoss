@@ -8,7 +8,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from sentence_transformers import SentenceTransformer
 
 from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
@@ -19,8 +19,8 @@ from ibm_watson_machine_learning.foundation_models.extensions.langchain import W
 
 from typing import Literal, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma, FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma, FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 import numpy as np
 # Most GENAI logs are at Debug level.
 # logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
@@ -275,6 +275,76 @@ output:
         // Rotate the cube
         cube.rotation.x += 0.01;
         cube.rotation.y += 0.01;
+
+        // Render the scene with the camera
+        renderer.render(scene, camera);
+      }}
+
+      // Start the animation loop
+      animate();
+    </script>
+  </body>
+</html>
+```
+input: generate 2 cube
+output:
+```
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Three.js Two Cubes</title>
+    <style>
+      body {{ margin: 0; }}
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
+    <script>
+      // Create a scene
+      const scene = new THREE.Scene();
+
+      // Create a camera
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      // Create a renderer
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a cube geometry
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+      // Create a material for the first cube
+      const material1 = new THREE.MeshBasicMaterial({{ color: 0xff0000 }});
+
+      // Create a mesh using the geometry and material for the first cube
+      const cube1 = new THREE.Mesh(geometry, material1);
+      cube1.position.x = -1.5;
+
+      // Add the first cube to the scene
+      scene.add(cube1);
+
+      // Create a material for the second cube
+      const material2 = new THREE.MeshBasicMaterial({{ color: 0x00ff00 }});
+
+      // Create a mesh using the geometry and material for the second cube
+      const cube2 = new THREE.Mesh(geometry, material2);
+      cube2.position.x = 1.5;
+
+      // Add the second cube to the scene
+      scene.add(cube2);
+
+      // Animation loop
+      function animate() {{
+        requestAnimationFrame(animate);
+
+        // Rotate the cubes
+        cube1.rotation.x += 0.01;
+        cube1.rotation.y += 0.01;
+        cube2.rotation.x -= 0.01;
+        cube2.rotation.y -= 0.01;
 
         // Render the scene with the camera
         renderer.render(scene, camera);
