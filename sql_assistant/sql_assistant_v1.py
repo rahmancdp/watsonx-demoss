@@ -1,15 +1,15 @@
 import streamlit as st
-from code_editor import code_editor
+# from code_editor import code_editor
 
 from pptx import Presentation
 from pptx.enum.lang import MSO_LANGUAGE_ID
 
 from docx import Document
 
-from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
-from ibm_watson_machine_learning.foundation_models import Model
-from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
-from ibm_watson_machine_learning.foundation_models.extensions.langchain import WatsonxLLM
+from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
+from ibm_watsonx_ai.foundation_models import Model
+from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
+from ibm_watsonx_ai.foundation_models.extensions.langchain import WatsonxLLM
 
 import tempfile
 import pathlib

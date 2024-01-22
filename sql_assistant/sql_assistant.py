@@ -1,14 +1,20 @@
 import streamlit as st
-from code_editor import code_editor
+# from code_editor import code_editor
 
-from pptx import Presentation
-from pptx.enum.lang import MSO_LANGUAGE_ID
+# from pptx import Presentation
+# from pptx.enum.lang import MSO_LANGUAGE_ID
 
-from docx import Document
+# from docx import Document
 
-from genai.credentials import Credentials
-from genai.schemas import GenerateParams
-from genai.model import Model
+# from genai.credentials import Credentials
+# from genai.schemas import GenerateParams
+# from genai.model import Model
+
+from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
+from ibm_watsonx_ai.foundation_models import Model
+from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
+from ibm_watsonx_ai.foundation_models.extensions.langchain import WatsonxLLM
+
 
 import tempfile
 import pathlib
@@ -38,20 +44,40 @@ api_endpoint = st.secrets["GENAI_API"]
 api_key = os.getenv("GENAI_KEY", None)
 api_endpoint = os.getenv("GENAI_API", None)
 
-creds = Credentials(api_key,api_endpoint)
+api_key = st.secrets["API_KEY"]
+project_id = st.secrets["PROJECT_ID"]
 
-params = GenerateParams(
-    decoding_method="greedy",
-    max_new_tokens=1000,
-    min_new_tokens=1,
-    # stream=True,
-    top_k=50,
-    top_p=1,
-    stop_sequences=['"}','\n\n'],
-)
+api_key = os.getenv("API_KEY", None)
+project_id = os.getenv("PROJECT_ID", None)
+
+creds = {
+    "url"    : "https://us-south.ml.cloud.ibm.com",
+    "apikey" : api_key
+}
+
+params = {
+    GenParams.DECODING_METHOD:"greedy",
+    GenParams.MAX_NEW_TOKENS:1000,
+    GenParams.MIN_NEW_TOKENS:1,
+    GenParams.TOP_K:50,
+    GenParams.TOP_P:1,
+    GenParams.STOP_SEQUENCES:['"}','\n\n'],
+}
+
+# creds = Credentials(api_key,api_endpoint)
+
+# params = GenerateParams(
+#     decoding_method="greedy",
+#     max_new_tokens=1000,
+#     min_new_tokens=1,
+#     # stream=True,
+#     top_k=50,
+#     top_p=1,
+#     stop_sequences=['"}','\n\n'],
+# )
 
 # llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
-llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+llmllama = Model("meta-llama/llama-2-70b-chat",creds, params,project_id)
 
 connection = sqlite3.connect("sample.db")
 
@@ -16107,9 +16133,9 @@ def executesql(sql):
 def querytosql(query,context):
     prompts = [buildpromptforquery(query,context)]
     SQL = ""
-    for response in llmllama.generate(prompts):
+    for response in llmllama.generate_text(prompts):
     #,ordered=True):
-        SQL += response.generated_text
+        SQL += response
     return SQL
 
 temp_dir = tempfile.TemporaryDirectory()
