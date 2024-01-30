@@ -1,6 +1,8 @@
 .env
 .chroma
 .streamlit
+__pycache__
 *.xml
 *.sql
-example
+cobol_sample
+code_sample
