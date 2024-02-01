@@ -3,6 +3,7 @@ import logging
 import os
 import tempfile
 import pathlib
+import timeit
 
 import streamlit as st
 from dotenv import load_dotenv
