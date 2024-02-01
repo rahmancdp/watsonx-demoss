@@ -186,54 +186,101 @@ def reviewer(filename,unchecked_code):
         st.markdown(summary)
     
     
-if __name__ == "__main__":
-    load_dotenv()
-    api_key = st.secrets["GENAI_KEY"]
-    api_endpoint = st.secrets["GENAI_API"]
+load_dotenv()
+api_key = st.secrets["GENAI_KEY"]
+api_endpoint = st.secrets["GENAI_API"]
 
-    api_key = os.getenv("GENAI_KEY", None)
-    api_endpoint = os.getenv("GENAI_API", None)
+api_key = os.getenv("GENAI_KEY", None)
+api_endpoint = os.getenv("GENAI_API", None)
 
-    creds = Credentials(api_key,api_endpoint)
+creds = Credentials(api_key,api_endpoint)
 
-    params = GenerateParams(
-        decoding_method="greedy",
-        max_new_tokens=4000,
-        min_new_tokens=10,
-        top_k=50,
-        top_p=1,
-        stop_sequences=["<end-of-code>"],
-        # repetition_penalty=1,
-    )
+params = GenerateParams(
+    decoding_method="greedy",
+    max_new_tokens=4000,
+    min_new_tokens=10,
+    top_k=50,
+    top_p=1,
+    stop_sequences=["<end-of-code>"],
+    # repetition_penalty=1,
+)
 
-    # llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
-    llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
-    llmsummary = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+# llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
+llmllama = Model(model="mistralai/mistral-7b-instruct-v0-2",credentials=creds, params=params)
+llmsummary = Model(model="mistralai/mistral-7b-instruct-v0-2",credentials=creds, params=params)
 
-    temp_dir = tempfile.TemporaryDirectory()
+# llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+# llmsummary = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
-    st.set_page_config(layout="wide")
-    st.header("code quality assistant powered by watsonx")
+temp_dir = tempfile.TemporaryDirectory()
 
-    incode = ""
-    outcode = ""
-    outdocumenation = ""
-    uploaded_files = []
+st.set_page_config(layout="wide")
+st.header("code quality assistant powered by watsonx")
 
-    colsource, colreview = st.columns(2)
+st.markdown("""
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+""", unsafe_allow_html=True)
 
-    with colsource:
-        uploaded_files = st.file_uploader(label="upload a java source code file",type=['java'],accept_multiple_files=True)
+hide_streamlit_style = """
+                <style>
+                div[data-testid="stToolbar"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stDecoration"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stStatusWidget"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                #MainMenu {
+                visibility: hidden;
+                height: 0%;
+                }
+                header {
+                visibility: hidden;
+                height: 0%;
+                }
+                footer {
+                visibility: hidden;
+                height: 0%;
+                }
+                </style>
+                """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
+incode = ""
+outcode = ""
+outdocumenation = ""
+uploaded_files = []
+
+colsource, colreview = st.columns(2)
+
+with colsource:
+    uploaded_files = st.file_uploader(label="upload a java source code file",type=['java'],accept_multiple_files=True)
+    for file in uploaded_files:
+        st.write("filename:", file.name)
+        with open(os.path.join(pathlib.Path(temp_dir.name),file.name),"wb") as f:
+            f.write(file.getbuffer())
+            incode = file.read().decode()
+            st.code(incode,language="java")
+
+with colreview:
+    reviewbutton = st.button("review")
+    if reviewbutton:
         for file in uploaded_files:
-            st.write("filename:", file.name)
-            with open(os.path.join(pathlib.Path(temp_dir.name),file.name),"wb") as f:
-                f.write(file.getbuffer())
-                incode = file.read().decode()
-                st.code(incode,language="java")
-
-    with colreview:
-        reviewbutton = st.button("review")
-        if reviewbutton:
-            for file in uploaded_files:
-                st.text('Reviewing Code is running...')
-                reviewer(file.name,incode)
+            st.text('Reviewing Code is running...')
+            reviewer(file.name,incode)

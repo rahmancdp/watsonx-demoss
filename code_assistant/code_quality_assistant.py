@@ -1,5 +1,5 @@
 import streamlit as st
-from code_editor import code_editor
+# from code_editor import code_editor
 
 from pptx import Presentation
 from pptx.enum.lang import MSO_LANGUAGE_ID
@@ -16,6 +16,8 @@ import re
 
 import os
 from dotenv import load_dotenv
+
+import javalang
 
 load_dotenv()
 
@@ -41,6 +43,28 @@ llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
 llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 def buildpromptforrefactor(code,sourcelang):
+    return f"""[INST]as java developer, update the following {sourcelang} code in backquoted base on following rules:
+<<SYS>>
+notes:
+- provide the problem and review comment only
+- end the generation with <end-of-code>
+- review only base on following rules:
+rule 1. include transaction to class and method:
+example: 
+//添加事务
+@Transactional(rollbackFor = Exception.class)
+rule 2. put log of function input variable in the first line of function:
+example:
+//打印参数
+public Result<TokenVo> login(@RequestBody @Valid LoginForm record) {{
+        log.info("/hqActivityTemplateAuth/login 请求:{{}}", record);
+<<SYS>>
+target code:
+`{code}`
+[/INST]
+rewrited version:"""
+
+def buildpromptforrefactor2(code,sourcelang):
     return f"""[INST]as java developer, rewrite the following {sourcelang} code in backquoted with following rules:
 <<SYS>>
 notes:
@@ -61,6 +85,7 @@ switch (queryVo.getQueryType()) {{
 }}
 rule 3. include transaction:
 example: 
+//添加事务
 @Transactional(rollbackFor = Exception.class)
 rule 4. should not return hashmap:
 example:
@@ -68,6 +93,7 @@ List<HashMap> queryUserAnswerDetails();
 rule 5. exception related log should exception information.
 rule 6. put log of function input variable in the first line of function:
 example:
+//打印参数
 public Result<TokenVo> login(@RequestBody @Valid LoginForm record) {{
         log.info("/hqActivityTemplateAuth/login 请求:{{}}", record);
 <<SYS>>
@@ -114,9 +140,20 @@ target code:
 [/INST]
 review:"""
 
+def codesplit(incode,sourcelang):
+    prompts = f"""
+extract the method declaration and body in following java code in backquoted:
+`{incode}`
+method delaration and bodys:
+    """
+    review = ""
+    for response in llmstarcoder.generate(prompts):
+        review += response.generated_text
+    return review
+
 def coderefactor(incode,sourcelang):
     #chunking
-    chunk_size = 1000
+    chunk_size = 500
     #//4
     chunks = []
     for i in range(0, len(incode), chunk_size):
@@ -127,7 +164,8 @@ def coderefactor(incode,sourcelang):
         prompts += [buildpromptforrefactor(chunk,sourcelang)]
     code = ""
     for response in llmllama.generate_async(prompts,ordered=True):
-        code += response.generated_text
+        if response is not None:
+            code += response.generated_text
     return code
 
 def codereview(incode,sourcelang):
@@ -177,6 +215,12 @@ with colreview:
         st.write(outreview)
 
 with colrefactor:
+    splitbutton = st.button("split")
+    if splitbutton:
+        with st.spinner(text="In progress...", cache=False):
+            outcode = codesplit(incode,sourcelang)
+        st.code(outcode,language=sourcelang)
+
     refactorbutton = st.button("refactor")
     if refactorbutton:
         with st.spinner(text="In progress...", cache=False):

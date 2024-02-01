@@ -33,7 +33,8 @@ params = GenerateParams(
 )
 
 llmstarcoder = Model(model="bigcode/starcoder",credentials=creds, params=params)
-llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
+llmllama = Model(model="mistralai/mistral-7b-instruct-v0-2",credentials=creds, params=params)
+# llmllama = Model(model="meta-llama/llama-2-70b-chat",credentials=creds, params=params)
 
 def buildpromptforconvert(code,sourcelang,targetlang):
     return f"""Assume you are an expert both in {sourcelang} and {targetlang}. The code below is in {sourcelang}. Please re-write in the {targetlang} language, keeping the same logic. Replace functions from {sourcelang} with the equivalent in {targetlang} that makes the most sense. 
@@ -56,13 +57,16 @@ Here are the requirements:
 ```java"""
 
 def buildpromptfordocumentation(code,sourcelang):
-    return f"""[INST]
-please generate documentation for the {sourcelang} source code in backquoted
+    return f"""[INST]you are java expert that help to write comprehensive documentation.
+please generate documentation for the {sourcelang} source code in backquoted.
+1. describe the class and properties
+2. describe the constructors
+3. describe the methods
 <<SYS>>
 `{code}`
 <<SYS>>
 [/INST]
-documentation:"""
+documentation in markdown:"""
 
 def codeconvert(incode,sourcelang,targetlang):
     #chunking
@@ -82,7 +86,7 @@ def codeconvert(incode,sourcelang,targetlang):
 
 def codedocumentation(incode,sourcelang):
     #chunking
-    chunk_size = len(incode)
+    chunk_size = len(incode)//4
     chunks = []
     for i in range(0, len(incode), chunk_size):
         chunks += [incode[i:i+chunk_size]]
@@ -99,7 +103,6 @@ def codedocumentation(incode,sourcelang):
 temp_dir = tempfile.TemporaryDirectory()
 
 st.set_page_config(layout="wide")
-st.header("code helper powered by watsonx")
 
 st.markdown("""
     <style>
@@ -146,6 +149,8 @@ hide_streamlit_style = """
                 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
+st.header("code assistant demo by watsonx")
+
 if "incode" not in st.session_state:
     st.session_state.incode = ""
 if "outcode" not in st.session_state:
@@ -153,9 +158,8 @@ if "outcode" not in st.session_state:
 if "outdoc" not in st.session_state:
     st.session_state.outdoc = ""
 
-colsource, colconvert, coldocumentation = st.columns(3)
-
-with colsource:
+with st.sidebar:
+    st.title("code assistant demo by watsonx")
     uploaded_file = st.file_uploader(label="upload a source code file",type=['cs','java','py','c','cpp'])
     if uploaded_file is not None:
         st.write("filename:", uploaded_file.name)
@@ -165,23 +169,22 @@ with colsource:
     sourcelang = st.selectbox(
         'What program language you want to convert from?',
         ('csharp','java', 'python'))
-    st.code(st.session_state.incode,language=sourcelang)
-    # code_editor(st.session_state.incode, lang=sourcelang)
-
-with colconvert:
     convertbutton = st.button("convert")
     targetlang = st.selectbox(
         'What program language you want to convert to?',
         ('java', 'c#', 'python'))
-    if convertbutton:
-        # st.write(sourcecode['text'])
-        with st.spinner(text="In progress...", cache=False):
-            st.session_state.outcode = codeconvert(st.session_state.incode,sourcelang,targetlang)
-    st.code(st.session_state.outcode,language=targetlang)
-
-with coldocumentation:
     docbutton = st.button("generate documentation")
-    if docbutton:
-        with st.spinner(text="In progress...", cache=False):
-            st.session_state.outdoc = codedocumentation(st.session_state.incode,sourcelang)
-    st.markdown(st.session_state.outdoc)
+
+st.code(st.session_state.incode,language=sourcelang)
+# code_editor(st.session_state.incode, lang=sourcelang)
+
+if convertbutton:
+    # st.write(sourcecode['text'])
+    with st.spinner(text="In progress...", cache=False):
+        st.session_state.outcode = codeconvert(st.session_state.incode,sourcelang,targetlang)
+st.code(st.session_state.outcode,language=targetlang)
+
+if docbutton:
+    with st.spinner(text="In progress...", cache=False):
+        st.session_state.outdoc = codedocumentation(st.session_state.incode,'c#')
+st.markdown(st.session_state.outdoc)
