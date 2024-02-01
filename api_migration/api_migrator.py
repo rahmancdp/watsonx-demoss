@@ -1,14 +1,14 @@
 import streamlit as st
-from code_editor import code_editor
+# from code_editor import code_editor
 
-from pptx import Presentation
-from pptx.enum.lang import MSO_LANGUAGE_ID
+# from pptx import Presentation
+# from pptx.enum.lang import MSO_LANGUAGE_ID
 
-from docx import Document
+# from docx import Document
 
-from genai.credentials import Credentials
-from genai.schemas import GenerateParams
-from genai.model import Model
+from ibm_watsonx_ai.credentials import Credentials
+from ibm_watsonx_ai.schemas import GenerateParams
+from ibm_watsonx_ai.model import Model
 
 import tempfile
 import pathlib
@@ -106,18 +106,67 @@ temp_dir = tempfile.TemporaryDirectory()
 st.set_page_config(layout="wide")
 st.header("api migrator powered by watsonx")
 
+st.markdown("""
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+""", unsafe_allow_html=True)
+
+hide_streamlit_style = """
+                <style>
+                div[data-testid="stToolbar"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stDecoration"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stStatusWidget"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                #MainMenu {
+                visibility: hidden;
+                height: 0%;
+                }
+                header {
+                visibility: hidden;
+                height: 0%;
+                }
+                footer {
+                visibility: hidden;
+                height: 0%;
+                }
+                </style>
+                """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
 with st.sidebar:
     st.title("API Migrator")
     st.markdown('- use case#1: extract information from mulesoft XML')
     st.markdown('- Use case#2: build SAP CPI package scaffolder from fact sheet')
     st.markdown('- Use case#3 - Generate Technical Spec from SAP CPI')
 
-
-
-jsonstring = ''
-csvstring = ''
-mmapstring = ''
-iflwstring = ''
+if "xmlstring" not in st.session_state:
+    st.session_state.xmlstring = ""
+if "jsonstring" not in st.session_state:
+    st.session_state.jsonstring = ""
+if "csvstring" not in st.session_state:
+    st.session_state.csvstring = ""
+if "mmapstring" not in st.session_state:
+    st.session_state.mmapstring = ""
+if "iflwstring" not in st.session_state:
+    st.session_state.iflwstring = ""
     
 uploaded_file = st.file_uploader(label="upload a xml file",type=['xml'])
 if uploaded_file is not None:
@@ -125,36 +174,36 @@ if uploaded_file is not None:
     with open(os.path.join(pathlib.Path(temp_dir.name),uploaded_file.name),"wb") as f:
         f.write(uploaded_file.getbuffer())
 
-        xmlstring = uploaded_file.read().decode()
+        st.session_state.xmlstring = uploaded_file.read().decode()
         
         colxml, coljson = st.columns(2)
         with colxml:
             sourcesystem = st.selectbox(
                 'What source system you want to migrate?',
                 ('mulesoft',))
-            st.code(xmlstring,language='xml') 
+            st.code(st.session_state.xmlstring,language='xml') 
         
         with coljson:
             genjsonbutton = st.button('generate JSON')
             if genjsonbutton:
                 with st.spinner(text="In progress...", cache=False):
-                    jsonstring = convert_xml_to_json(xmlstring[0:4000])
-            st.code(jsonstring,language='json')
+                    st.session_state.jsonstring = convert_xml_to_json(st.session_state.xmlstring[0:4000])
+            st.code(st.session_state.jsonstring,language='json')
  
             gencsvbutton = st.button('generate CSV')
             if gencsvbutton:
                 with st.spinner(text="In progress...", cache=False):
-                    csvstring = convert_xml_to_name_value_pair(xmlstring[0:4000])
-            st.code(csvstring,language='csv')
+                    st.session_state.csvstring = convert_xml_to_name_value_pair(xmlstring[0:4000])
+            st.code(st.session_state.csvstring,language='csv')
 
             genmmapbutton = st.button('generate MMAP')
             if genmmapbutton:
                 with st.spinner(text="In progress...", cache=False):
-                    mmapstring = generate_mmap(xmlstring[0:4000],"")
-            st.code(mmapstring,language='xml')
+                    st.session_state.mmapstring = generate_mmap(st.session_state.xmlstring[0:4000],"")
+            st.code(st.session_state.mmapstring,language='xml')
 
             geniflwbutton = st.button('generate iflow')
             if geniflwbutton:
                 with st.spinner(text="In progress...", cache=False):
-                    iflwstring = generate_iflw(jsonstring[0:4000])
-            st.code(iflwstring,language='xml')
+                    st.session_state.iflwstring = generate_iflw(st.session_state.jsonstring[0:4000])
+            st.code(st.session_state.iflwstring,language='xml')
