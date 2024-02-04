@@ -1,29 +1,21 @@
 <template>
   <div>
     <CvHeader aria-label="Header">
-      <CvHeaderGlobalAction>
+      <CvHeaderGlobalAction aria-label="Notifications">
+        <Notification20/>
+        <!-- Global action content here -->
+      </CvHeaderGlobalAction>
+      <CvHeaderGlobalAction aria-label="UserAvatar">
+        <UserAvatar20/>
+        <!-- Global action content here -->
+      </CvHeaderGlobalAction>
+      <CvHeaderGlobalAction aria-label="AppSwitcher20">
+        <AppSwitcher20/>
         <!-- Global action content here -->
       </CvHeaderGlobalAction>
       <CvHeaderMenuButton @click="toggleMenu" :expanded="isMenuExpanded" />
-      <CvHeaderName prefix="LangChain">Text Summariser with Watsonx</CvHeaderName>
+      <CvHeaderName>Text Summariser with Watsonx</CvHeaderName>
       <CvHeaderNavigation :expanded="isMenuExpanded">
-        <CvHeaderMenuItem>
-          <CvHeaderMenuItemButton>
-            <CvHeaderMenuIcon>
-              <!-- Add your icon component or SVG here -->
-            </CvHeaderMenuIcon>
-            Home
-          </CvHeaderMenuItemButton>
-        </CvHeaderMenuItem>
-        <CvHeaderMenuItem>
-          <CvHeaderMenuItemButton>
-            <CvHeaderMenuIcon>
-              <!-- Add your icon component or SVG here -->
-            </CvHeaderMenuIcon>
-            About
-          </CvHeaderMenuItemButton>
-        </CvHeaderMenuItem>
-        <!-- Add more menu items as needed -->
       </CvHeaderNavigation>
     </CvHeader>
     <div class="container">
@@ -33,13 +25,17 @@
         <CvTextArea v-model="summary" label="Summary will appear here" rows="10" cols="50" readonly />
       </div>
       <CvButton @click="summarize">Summarize</CvButton>
+      <div class="side-rail">
+        <!-- Side rail content here -->
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { CvTitle, CvButton, CvTextArea, CvHeader, CvHeaderGlobalAction, CvHeaderMenuButton, CvHeaderName, CvHeaderNavigation, CvHeaderMenuItem, CvHeaderMenuItemButton, CvHeaderMenuIcon } from '@carbon/vue';
+import { CvTitle, CvButton, CvTextArea, CvHeader, CvHeaderGlobalAction, CvHeaderMenuButton, CvHeaderName, CvHeaderNavigation } from '@carbon/vue';
 import axios from 'axios';
+import { Notification20, UserAvatar20, AppSwitcher20 } from '@carbon/icons-vue';
 
 export default {
   components: {
@@ -48,12 +44,12 @@ export default {
     CvHeaderMenuButton,
     CvHeaderName,
     CvHeaderNavigation,
-    CvHeaderMenuItem,
-    CvHeaderMenuItemButton,
-    CvHeaderMenuIcon,
     CvTitle,
     CvButton,
     CvTextArea,
+    Notification20,
+    UserAvatar20,
+    AppSwitcher20
   },
   data() {
     return {
@@ -87,6 +83,11 @@ export default {
 .container {
   padding: 20px;
   padding-top: 60px; /* Add padding to the top */
+}
+
+.side-rail {
+  flex-basis: 300px; /* Adjust the width as needed */
+  /* Add styling for the side rail */
 }
 
 .text-area-container {
