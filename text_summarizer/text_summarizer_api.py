@@ -1,8 +1,15 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+from starlette.background import BackgroundTask
+from starlette.responses import StreamingResponse
+
+import asyncio
+import json
+
 import uvicorn
 
 from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
@@ -21,7 +28,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins= "*",
     allow_methods=["GET", "POST", "OPTIONS"],  # Add "OPTIONS" method here
     allow_headers=["Content-Type"],
 )
@@ -29,6 +36,54 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+async def stream_generator(source_text):
+
+    # if not source_text.strip():
+    #     return {"error": "Please provide source text"}
+
+    load_dotenv()
+    api_key = os.getenv("API_KEY", None)
+    project_id = os.getenv("PROJECT_ID", None)
+
+    creds = {
+        "url"    : "https://us-south.ml.cloud.ibm.com",
+        "apikey" : api_key
+    }
+
+    params = {
+        GenParams.DECODING_METHOD: "sample",
+        GenParams.MAX_NEW_TOKENS: 3000,
+        GenParams.MIN_NEW_TOKENS: 1000,
+        GenParams.TEMPERATURE: 0.5,
+        GenParams.TOP_K: 50,
+        GenParams.TOP_P: 1
+    }
+
+    model = Model("google/flan-ul2", creds, params, project_id)
+
+    for chunk in model.generate_text_stream(source_text):
+        yield chunk.encode("utf-8")
+        await asyncio.sleep(0.1)
+
+@app.websocket("/websocket")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    source_text = websocket.query_params.get("source_text")
+
+    # source_text = "Hong Kong"
+
+    print(f"SOURCE: {source_text}")
+
+    async for chunk in stream_generator(f"讲一个关于{source_text}的故事"):
+        await websocket.send_text(chunk.decode())
+
+    
+    # async for chunk in stream_generator(f"generate a long story about a {source_text} with 3000 words"):
+    #     await websocket.send_text(chunk.decode())
+
+    await websocket.close()
 
 @app.post("/summarize")
 async def summarize_text(request: Request, payload: dict):
@@ -61,9 +116,6 @@ async def summarize_text(request: Request, payload: dict):
     summary = ""
     for response in model.generate_text_stream(source_text):
         summary += response
-
-    for chunk in model.generate_text_stream(source_text):
-        print(chunk, end='')
     
     return {"summary": summary}
 

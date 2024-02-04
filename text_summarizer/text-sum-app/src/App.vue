@@ -55,20 +55,60 @@ export default {
     return {
       sourceText: '',
       summary: '',
-      isMenuExpanded: false,
+      streaming: false,
     };
   },
   methods: {
     toggleMenu() {
       this.isMenuExpanded = !this.isMenuExpanded;
     },
-    async summarize() {
+    summarize() {
+      this.streaming = true;
+
+      this.summary = 'Summarizing...';
+
+      const socket = new WebSocket(`ws://localhost:8000/websocket?source_text=${encodeURIComponent(this.sourceText)}`);
+
+      socket.onopen = () => {
+        console.log("WebSocket connection established");
+        socket.send("start-streaming");
+      };
+
+      socket.onmessage = (event) => {
+        const text = event.data;
+        this.summary += text;
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket connection closed");
+        this.streaming = false;
+      };
+    },
+    async summarize1() {
       try {
+        this.summary = 'Summarizing...';
         const response = await axios.post('http://localhost:8000/summarize', {
           source_text: this.sourceText,
         });
 
-        this.summary = response.data.summary;
+        const stream = response.data.stream;
+        stream.onmessage = (event) => {
+          this.summary += event.data;
+        };
+
+        stream.onerror = (event) => {
+          console.error('Error occurred in stream:', event);
+        };
+
+        stream.onclose = () => {
+          console.log('Stream closed');
+        };
+
+        // const response = await axios.post('http://localhost:8000/summarize', {
+        //   source_text: this.sourceText,
+        // });
+
+        // this.summary = response.data.summary;
       } catch (error) {
         console.error(error);
       }
