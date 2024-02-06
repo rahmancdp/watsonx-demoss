@@ -60,7 +60,7 @@ async def stream_generator(source_text):
         GenParams.TOP_P: 1
     }
 
-    model = Model("google/flan-ul2", creds, params, project_id)
+    model = Model("meta-llama/llama-2-70b-chat", creds, params, project_id)
 
     for chunk in model.generate_text_stream(source_text):
         yield chunk.encode("utf-8")
@@ -76,12 +76,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     print(f"SOURCE: {source_text}")
 
-    async for chunk in stream_generator(f"讲一个关于{source_text}的故事"):
-        await websocket.send_text(chunk.decode())
+    # async for chunk in stream_generator(f"讲一个关于{source_text}的故事"):
+    #     await websocket.send_text(chunk.decode())
 
     
-    # async for chunk in stream_generator(f"generate a long story about a {source_text} with 3000 words"):
-    #     await websocket.send_text(chunk.decode())
+    async for chunk in stream_generator(f"generate a long story about a {source_text} with 3000 words"):
+        await websocket.send_text(chunk.decode())
 
     await websocket.close()
 
