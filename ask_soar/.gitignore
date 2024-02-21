@@ -1,0 +1,13 @@
+.env
+.chroma
+.streamlit
+__pycache__
+*.xml
+*.sql
+*.xls
+*.xlsx
+*.zip
+*.csv
+Sample_Java_Code_For_IBM
+cobol_sample
+code_sample
