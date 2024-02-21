@@ -38,3 +38,37 @@ update the API call to IBM public cloud version.
     - generate test case (TODO)
 15. tuning
     - prompt tuning
+16. ask SOAR
+    - suppose you be security SME, and need to learn the latest vulnerability in CVE, and get advise on the risk.
+17. ask AIOps (TODO)
+    - chat with AIOps, Observability, Helpdesk
+    - summarize event, metrics, log as ticket, and help open ot
+    - generate ansible and other script to automate the task
+18. ask Integration (TODO)
+    - propose integration script
+    - generate integration testing data
+19. ask DevOps (TODO)
+    - review the code checkin
+    - explain the code and generate documentation
+    - classify the issue and tagging and route to right person
+    - summarize the pipeline status
+    - generate metadata, manifest
+20. ask Requirement (TODO)
+    - qualify the requirement
+    - generate requirement base on interview transcript
+    - generate the requriement in company standard format
+21. ask Hybrid Cloud (TODO)
+    - generate kubernetes script, call
+    - generate ansible/scripts
+    - generate architecture diagram in UML?
+    - ask the status in class thru natual langauage
+22. ask Data platform (TODO)
+    - chat to query the data and generate SQL to query
+    - generate data visualization in JS/python
+    - chat to drill down to the data detail
+    - descript the data dictionary
+23. ask Asset Management (TODO)
+    - chat to know the asset status from maximo
+    - chat to operate the maximo
+    - generate summarize of the asset in environment
+    - generate report base on asset context
