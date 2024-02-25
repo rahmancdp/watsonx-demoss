@@ -72,3 +72,5 @@ update the API call to IBM public cloud version.
     - chat to operate the maximo
     - generate summarize of the asset in environment
     - generate report base on asset context
+24. integrate with llamaindex
+    - RAG with llamaindex
