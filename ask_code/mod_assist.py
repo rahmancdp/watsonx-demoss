@@ -54,10 +54,11 @@ llmmistra = Model("ibm-mistralai/mixtral-8x7b-instruct-v01-q",creds, params, pro
 # llmllama = Model("ibm/granite-13b-instruct-v2",creds, params, project_id)
 llmllama = Model("meta-llama/llama-2-70b-chat",creds, params, project_id)
 
-def generate_funcspec(pseudocode):
+def generate_funcspec(pseudocode, funcspec):
     prompt = f"""[INST]you are a system analyist with good knowledge of pseudo code from mainframe, \
         please summary the psudo code provide and generate a functional specification:
         -generate functional specific in markdown
+        -read into the  funcspec provided in detail.
         -structure the technical specification as unit of each servcie
         -for each service, propose the service name
         -for each service, identify the input and output
@@ -65,17 +66,20 @@ def generate_funcspec(pseudocode):
         -for each service, identify the journal
         -generate in concise, clear, professional style.
             <<SYS>>
-            pseudo code: `{pseudocode[:3000]}`
+            pseudo code: `{pseudocode}`
+            funcspec: `{funcspec}`
             <</SYS>>
-            [/INST]service name:```"""
+            [/INST]summary:```"""
     prompt = f"""[INST]you be expert on banking system. please summarize the psudo code in backquoted:
         -read into the pseudo code in detail.
+        -generate the summary on top of the previous summary provided if any.
         -identify potential service in the pseudo code.
         -for each input identified, describe the purpose, format and potential data source. generate in layout of input name - (format) (purpose) (potential data source)
         -for each output identified, describe the purpose, format and potential usage.
-        -for each process identified, provide the programming logic, and provide sample java code.
+        -for each process identified, provide the programming logic.
             <<SYS>>
-            pseudo code: `{pseudocode[:3000]}`
+            pseudo code: `{pseudocode}`
+            previous summary: `{funcspec}`
             <</SYS>>
             [/INST]summary:```"""
     print("$$$$"+prompt)
@@ -775,7 +779,14 @@ with tabPseudoCodeToFuncSpec:
 
             st.session_state.summary = []
             for code in st.session_state.pseudocode:
-                funcspec = generate_funcspec(code)
+                if code.strip() == '':
+                    continue
+                chunks = split_string(code,3000)
+                funcspec = ""
+                for chunk in chunks:
+                    answer = generate_funcspec(chunk,funcspec)
+                    funcspec += answer
+                
                 st.session_state.summary.append(funcspec)
                 st.markdown(funcspec)
                 st.text("##########")
